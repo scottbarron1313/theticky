@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<head>    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script>L_PREFER_CANVAS = false; L_NO_TOUCH = false; L_DISABLE_3D = false;</script>
+
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MetisMenu CSS -->
+    <link href="/static/vendor/metisMenu/metisMenu.min.css" rel="stylesheet">
+    <!-- Morris Charts CSS -->
+    <link href="/static/vendor/morrisjs/morris.css" rel="stylesheet">
+    <!-- Custom Fonts -->
+    <link href="/static/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- Custom Theme JavaScript -->
+    <script src="https://code.angularjs.org/1.4.3/angular.min.js"></script>
+    <script src="https://code.angularjs.org/1.4.3/angular-route.min.js"></script>
+    <script src="https://code.angularjs.org/1.4.3/angular-resource.min.js"></script>
+
+    <!-- Jquery, maybe need a different version -->
+    <!-- <script src="/static/vendor/jquery/jquery.min.js"></script> -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="/static/vendor/metisMenu/metisMenu.min.js"></script>
+
+    <!-- DataTables JavaScript -->
+    <script src="/static/vendor/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="/static/vendor/datatables-plugins/dataTables.bootstrap.min.js"></script>
+    <script src="/static/vendor/datatables-responsive/dataTables.responsive.js"></script>
+
+    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://use.fontawesome.com/f3c5373cae.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" />
+
+    <!-- I think these three will allow for custom icons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    
+    <link rel="stylesheet" href="https://rawgit.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css" />
+	<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static', filename='sandbox.css') }}">
+
+    <style> html, body {width: 100%;height: 100%;margin: 0;padding: 0;} </style>
+    <style> #map {position:absolute;top:0;bottom:0;right:0;left:0;} </style>
+    <style> #main_map {
+        position : relative;
+        width : 1000.0px;
+        height: 500.0px;
+        margin: auto;
+        }
+    </style>
+    <style> #entry_form {
+        font-size:75%;
+    }
+    </style>
+    <style> 
+        #panels_location {
+        position : relative;
+        width: 1060.0px;
+        margin: auto;}
+    </style>
+    <style>
+    .ui-autocomplete
+    {
+        z-index:9999 !important;
+    }
+    </style>
+    <style>
+        #grouped {
+            display:inline-block;
+        }
+    </style>
+</head>
+<body>
+    <br>
+    <!-- The Map -->
+    <div class= "panel panel-success" id= "panels_location"> 
+        <div class="panel-heading">
+            <h4>
+                <u>
+                    <a href= "/"> The Map</a>
+                </u>
+            </h4>
+
+            <!-- Search bar for different climbing areas -->
+            <form method= "post">
+                <input type="text" id= "search_areas" name="search_areas" placeholder="Search Crags...">
+                <input type="submit" name="Search Crag">
+            </form>
+
+            <!-- Search bar for coordinates -->
+            <form method= "post">
+                <input type="text" id= "search_coords" name="search_coords" placeholder="Search Coordinates...">
+                <input type="submit" name="Search Coords">
+            </form>
+
+        </div> 
+        <div class= "panel-body">   
+            <div class="folium-map" id="main_map">
+            </div>
+        </div>
+    </div>
+    <br>
+    <!-- Add a climb button -->
+    <div class= "panel panel-success" id= "panels_location">
+        <div class="panel-heading"><h4><u>Add A Climb</u></h4>
+        </div> 
+        <div class= "panel-body">  
+            <form method= "post">
+                <div id= "grouped">Climb: <input type="text" name="climb" id="climb" required></div>
+                <div id= "grouped">Grade:
+                    <select name= "grade" required>
+                        <option value="0">V0</option>
+                        <option value="1">V1</option>
+                        <option value="2">V2</option>
+                        <option value="3">V3</option>
+                        <option value="4">V4</option>
+                        <option value="5">V5</option>
+                        <option value="6">V6</option>
+                        <option value="7">V7</option>
+                        <option value="8">V8</option>
+                        <option value="9">V9</option>
+                        <option value="10">V10</option>
+                        <option value="11">V11</option>
+                        <option value="12">V12</option>
+                        <option value="13">V13</option>
+                        <option value="14">V14</option>
+                        <option value="15">V15</option>
+                        <option value="16">V16</option>
+                        <option value="17">V17</option>
+                    </select>
+                </div>
+                <div id= "grouped">Status: 
+                    <select name= "sent_boo" required>
+                        <option value= "True">Sent</option>
+                        <option value= "False">Project</option>
+                    </select>
+                </div>
+                <div id= "grouped">Privacy setting: 
+                    <select name="privacy" required>
+                        <option value="private">Private</option>
+                        <option value="friends">Friends Only</option>
+                        <option value= "public">Public</option>
+                    </select>
+                </div>
+                <div id= "grouped">Sector: <input type="text" name="sector" id="search_areas" placeholder="Sector" required></div>
+                <div id= "grouped">Crag: <input type="text" name="crag" id="search_areas" placeholder="Crag" required></div>
+                <div id= "grouped">Date: <input type="date" name="date"></div>
+                <div id= "grouped">Latitude: <input type="text" name="latitude" id="lat" placeholder="3.0637"></div>
+                <div id= "grouped">Longitude: <input type="text" name="longitude" id="longit" placeholder="-125.6451"></div>
+                <br>
+                Comment: <input type="text" name="comment" placeholder="Comment" style="width:800px">
+                <input type="submit" name="Submit">
+            </form>
+        </div>
+    </div>
+    <br>
+    <!-- Table with climbs -->
+    <div class= "panel panel-success" id= "panels_location">
+        <div class="panel-heading"><h4><u>Ticklist</u></h4>
+        </div> 
+        <div class= "panel-body">
+            <table class="table table-bordered table-striped dataTable table-hover table-condensed" id="ticky_table">
+                {{ table }}
+          </table>
+        </div>
+    </div>
+    <script type='text/javascript'>  
+
+        
+        var southWest = L.latLng(-90, -180);
+        var northEast = L.latLng(90, 180);
+        var bounds = L.latLngBounds(southWest, northEast);
+        // Map layer with streets
+    	var streets_tile_layer = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+            {
+                maxZoom: 20,
+                minZoom: 1,
+                continuousWorld: false,
+                noWrap: false,
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+                detectRetina: false
+                }
+            )
+        // Map layer with just satellite imagery
+    	var imagery_tile_layer = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+            {
+                maxZoom: 20,
+                minZoom: 1,
+                continuousWorld: false,
+                noWrap: false,
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+                detectRetina: false
+                }
+            )
+
+        // Marker colors
+        var redMarker = L.AwesomeMarkers.icon({
+                                                markerColor: 'red'
+                                              });
+        var blueMarker = L.AwesomeMarkers.icon({
+                                                markerColor: 'blue'
+                                              });
+        var greenMarker = L.AwesomeMarkers.icon({
+                                                icon: 'grav',
+                                                markerColor: 'green'
+                                              });
+
+
+    	{{ Boulder_Info }}
+
+        var marker_your_location = L.marker([36.8796, -121.9043],
+                {
+                    icon: redMarker
+                    }
+                );
+        var popup_your_location = L.popup({maxWidth: '300'});
+        var html_your_location = ('<div id="html_your_location" style="width: 100.0%; height: 100.0%;">Your Location</div>')[0];
+        popup_your_location.setContent(html_your_location);
+        marker_your_location.bindPopup("Your Location");
+
+        var map_boulders = L.layerGroup(boulders);
+        var map_your_location= L.layerGroup([marker_your_location])
+
+        // The map
+    	var main_map = L.map(
+                              'main_map',
+                              {center: [37.389041,-122.02181],
+                              zoom: 6,
+                              maxBounds: bounds,
+                              layers: [streets_tile_layer],
+                              worldCopyJump: false,
+                              crs: L.CRS.EPSG3857
+                             });
+
+    	main_map.addLayer(map_boulders)
+        main_map.addLayer(map_your_location)
+
+
+
+
+        // Add imagery to map
+    	var baseMaps = {"Streets": streets_tile_layer,
+    					"Imagery": imagery_tile_layer
+    					};
+    	
+        // Don't know what this does
+        var overlayMaps = {"Boulders": map_boulders, "Your Location": map_your_location};
+    	
+
+    	L.control.layers(baseMaps, overlayMaps).addTo(main_map);
+
+        // Lat, long popup
+    	var lat_lng_popup = L.popup();
+        function latLngPop(e) {
+    		lat = e.latlng.lat.toFixed(4)
+    		longit = e.latlng.lng.toFixed(4)
+            // This creates a popup that displays the lat/long, but I don't think we need this. 
+            // Lat/long still populated in "add climb" section
+            // lat_lng_popup.setLatLng(e.latlng).setContent("Latitude: " + lat +"<br>Longitude: " + longit).openOn(main_map);				
+    		document.getElementById("lat").setAttribute('value', lat);
+    		document.getElementById("longit").setAttribute('value', longit);
+    	}
+
+        // On click, latLngPop get's run
+        main_map.on('click', latLngPop);
+
+        // Trying to populate climb info base on clicking a popup
+        function getClimb(climb_name) {
+            if (climb_name === null) {
+                climb_name= "Climb";
+            }
+            document.getElementById("climb").setAttribute('value', climb_name);
+        }
+    	
+        // Function to change the extent of the map
+    	function changeExtent(lat, lng, zoom) {
+    		main_map.setView(new L.LatLng(lat, lng), zoom);
+        };
+
+        // Uses the changeExtent function
+        {{ Map_Extent }}
+
+        // <!-- Makes the ticklist table a DataTable -->
+        $(document).ready(function() {
+        $('#ticky_table').DataTable();
+        } );
+
+        // Autocomplete function in search bars
+        $(function() {
+            var crags = {{ autocomplete_list }};
+        $("#search_areas").autocomplete({
+          source: crags});
+        });
+        </script>
+
+</body>
+</html>
+    </script>
+
+    <br>
+    </body>
+</html>

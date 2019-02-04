@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Buttermilks",
+    "state": "California",
+    "country": "USA",
+    "latitude": 37.3302,
+    "longitude": -118.5754
+  },
+  {
+    "name": "Camp 4",
+    "state": "California",
+    "country": "USA",
+    "latitude": 37.7413,
+    "longitude": -119.6038
+  },
+  {
+    "name": "Squamish",
+    "state": "British Columbia",
+    "country": "CAN",
+    "latitude": 49.6804,
+    "longitude": -123.1535
+  }
+]

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+    </head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>The Ticky - login page</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome to The Ticky!</h1>
+            <br>
+            Ticky Member Login:
+            <form action="" method="post">
+                <input type="text" placeholder="Username" name="username" required>
+                <br>
+                <input type="password" placeholder="Password" name="password" required>
+                <br>
+                <input class="btn btn-success" type="submit" name="login" value="Login">
+            </form>
+            <br>
+            <br>
+            Forgot your login?
+            <form action="" method="post">
+                <input type="text" placeholder="soft@boulders.com" name="request_login" required>
+                <br>
+                <input class="btn btn-success" type="submit" name="email_password" value="Email Me My Password">
+            </form>
+            <br>
+            <br>
+            New to Ticky? Create an account:
+            <form action="" method="post">
+                <input type="text" placeholder="Username" name="new_username" required>
+                <br>
+                <input type="password" placeholder="Password" name="new_password" required>
+                <br>
+                <input type= "text" placeholder="soft@boulders.com" name="new_email" required>
+                <br>
+                <input class="btn btn-success" type="submit" name= "create_account" value="Create Account">
+            </form>
+            <br>
+            <br>
+            {% if error %}
+                <div class= "alert alert-danger"
+                    <p class="error"><strong>Error:</strong> {{ error }}
+                </div>
+            {% endif %}
+            {% if success %}
+                <div class= "alert alert-success">
+                    <p class="success"><strong></strong> {{ success }}
+                </div>
+            {% endif %}
+        </div>
+    </body>
+</html>
