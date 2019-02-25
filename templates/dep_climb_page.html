@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+    </head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>Climb page</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+        <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    	<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    	<link rel="stylesheet" href="https://rawgit.com/python-visualization/folium/master/folium/templates/leaflet.awesome.rotate.css"/>
+        <style> 
+	        #panels_location {
+	        position : relative;
+	        width: 1060.0px;
+	        margin: auto;}
+    	</style>
+    	<style> 
+    		#main_map {
+	        position : relative;
+	        width : 1000.0px;
+	        height: 500.0px;
+	        margin: auto;
+	        }
+	    </style>
+	    <style>
+	        #grouped {
+	            display:inline-block;
+	        }
+    	</style>
+    </head>
+    <body>
+    	<!-- To keep a gap at the top of the page -->
+    	<br>
+    	<div class= "panel panel-success" id= "panels_location"> 
+	        <div class="panel-heading">
+	        	<h4>
+	                <u>
+	                    <a href= "/"> The Map</a>
+	                </u>
+	            </h4>
+	        </div> 
+	        <div class= "panel-body">   
+	            <div class="folium-map" id="main_map">
+	            </div>
+	        </div>
+	    </div>
+
+	    <script type='text/javascript'>
+	    	var southWest = L.latLng(-90, -180);
+		    var northEast = L.latLng(90, 180);
+		    var bounds = L.latLngBounds(southWest, northEast);
+		    // Map layer with streets
+			var streets_tile_layer = L.tileLayer(
+		        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+		        {
+		            maxZoom: 20,
+		            minZoom: 1,
+		            continuousWorld: false,
+		            noWrap: false,
+		            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+		            detectRetina: false
+		            }
+		        )
+		    // Map layer with just satellite imagery
+			var imagery_tile_layer = L.tileLayer(
+		        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+		        {
+		            maxZoom: 20,
+		            minZoom: 1,
+		            continuousWorld: false,
+		            noWrap: false,
+		            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+		            detectRetina: false
+		            }
+		        )
+
+		    // Marker colors
+		    var redMarker = L.AwesomeMarkers.icon({
+		                                            markerColor: 'red'
+		                                          });
+		    var blueMarker = L.AwesomeMarkers.icon({
+		                                            markerColor: 'blue'
+		                                          });
+		    var greenMarker = L.AwesomeMarkers.icon({
+		                                            markerColor: 'green'
+		                                          });
+
+			{{ boulder_info }}
+
+		    // The map
+			var main_map = L.map(
+		                          'main_map',
+		                          {center: [37.389041,-122.02181],
+		                          zoom: 6,
+		                          maxBounds: bounds,
+		                          layers: [streets_tile_layer],
+		                          worldCopyJump: false,
+		                          crs: L.CRS.EPSG3857
+		                         });
+		    
+		    // Add boulders to the map
+			main_map.addLayer(boulders)
+
+		    // Add imagery to map
+			var baseMaps = {"Streets": streets_tile_layer,
+							"Imagery": imagery_tile_layer
+							};
+			
+		    // Don't know what this does
+		    var overlayMaps = {"Boulders": boulders};
+			
+
+			L.control.layers(baseMaps, overlayMaps).addTo(main_map);
+
+	    </script>
+
+	    <br>
+	    <!-- Add a climb button -->
+	    <div class= "panel panel-success" id= "panels_location">
+	        <div class="panel-heading"><h4><u>Add A Climb</u></h4>
+	        </div> 
+	        <div class= "panel-body">  
+	            <form method= "post">
+	                <div id= "grouped">Grade:
+	                    <select name= "grade" required>
+	                        <option value="0">V0</option>
+	                        <option value="1">V1</option>
+	                        <option value="2">V2</option>
+	                        <option value="3">V3</option>
+	                        <option value="4">V4</option>
+	                        <option value="5">V5</option>
+	                        <option value="6">V6</option>
+	                        <option value="7">V7</option>
+	                        <option value="8">V8</option>
+	                        <option value="9">V9</option>
+	                        <option value="10">V10</option>
+	                        <option value="11">V11</option>
+	                        <option value="12">V12</option>
+	                        <option value="13">V13</option>
+	                        <option value="14">V14</option>
+	                        <option value="15">V15</option>
+	                        <option value="16">V16</option>
+	                        <option value="17">V17</option>
+	                    </select>
+	                </div>
+	                <div id= "grouped">Status: 
+	                    <select name= "sent_boo" required>
+	                        <option value= "True">Sent</option>
+	                        <option value= "False">Project</option>
+	                    </select>
+	                </div>
+	                <div id= "grouped">Privacy setting: 
+	                    <select name="privacy" required>
+	                        <option value="private">Private</option>
+	                        <option value="friends">Friends Only</option>
+	                        <option value= "public">Public</option>
+	                    </select>
+	                </div>
+	                <div id= "grouped">Date: <input type="date" name="date"></div>
+	                <br>
+	                Comment: <input type="text" name="comment" placeholder="Comment" style="width:800px">
+	                <input type="submit" name="Submit">
+	            </form>
+	        </div>
+	    </div>
+	    <br>
+    	<div class= "panel panel-success" id= "panels_location">
+	        <div class="panel-heading">
+	        	<h4>
+	        		<u>
+	        			Ascents
+	        		</u>
+	        	</h4>
+	        </div> 
+	        <div class= "panel-body">
+	            <table class="table table-bordered table-striped dataTable table-hover table-condensed" id="ticky_table">
+	                {{ table }}
+	          	</table>
+	        </div>
+	    </div>
+	    <!-- To keep a gap at the bottom -->
+    	<br>
+    </body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    </head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>The Ticky</title>
+
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+
+        <!-- Font Awesome Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+		<!-- jquery -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+		<!-- Popper JS -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+
+		<!-- Bootstrap JS -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+		
+        <!-- Leaflet -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+
+    </head>
+	<body>
+		<!-- Navbar -->
+		<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+			<ul class="navbar-nav">
+				<li class="nav-item active">
+					<a class="nav-link" href="#">The Ticky</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#">Ticklist</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="#">Search</a>
+				</li>
+			</ul>
+			<ul class="navbar-nav ml-auto">
+				<li>
+					<i class="fa fa-user-o fa-3x"></i>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href={{ user_url }}> {{ username }}</a>
+				</li>
+			</ul>
+		</nav>
+
+		<br>
+
+		<!-- Add Ascent -->
+		<div class= "container">
+			<div class= "panel-body">
+				<h2>Add Ascent</h2>
+				<form>
+					<div class="form-row">
+						<div class="form-group col-md-6">
+							<label for="inputClimbName">Climb Name</label>
+							<input type="text" class="form-control" id="inputClimbName" placeholder="Climb Name">
+						</div>
+						<div class="form-group col-md-4">
+							<label for="inputDate">Date</label>
+							<input type="Date" class="form-control" id="inputDate" placeholder="Date">
+						</div>
+						<div class="form-group col-md-2">
+							<label for="inputGrade">Grade</label>
+							<select id="inputGrade" class="form-control">
+								<option value="0">V0</option>
+		                        <option value="1">V1</option>
+		                        <option value="2">V2</option>
+		                        <option value="3">V3</option>
+		                        <option value="4">V4</option>
+		                        <option value="5">V5</option>
+		                        <option value="6">V6</option>
+		                        <option value="7">V7</option>
+		                        <option value="8">V8</option>
+		                        <option value="9">V9</option>
+		                        <option value="10">V10</option>
+		                        <option value="11">V11</option>
+		                        <option value="12">V12</option>
+		                        <option value="13">V13</option>
+		                        <option value="14">V14</option>
+		                        <option value="15">V15</option>
+		                        <option value="16">V16</option>
+		                        <option value="17">V17</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group col-md-5">
+							<label for="inputSector">Sector</label>
+							<input type="text" class="form-control" id="inputSector">
+						</div>
+						<div class="form-group col-md-5">
+							<label for="inputCrag">Crag</label>
+							<input type="text" class="form-control" id="inputCrag">
+						</div>
+						<div class="form-group col-md-2">
+							<label for="inputStars">Stars</label>
+							<select id="inputStars" class="form-control">
+								<option value="1">*</option>
+		                        <option value="2">**</option>
+		                        <option value="3">***</option>
+		                        <option value="4">****</option>
+		                        <option value="5">*****</option>
+	                       </select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="inputComment">Comment</label>
+						<input type="text" class="form-control" id="inputComment" placeholder="Comment">
+					</div>
+					<button type="submit" class="btn btn-primary">Add Ascent</button>
+				</form>
+	            
+		</div>
+    </body>
+</html>
+
