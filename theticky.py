@@ -126,7 +126,8 @@ def font_to_v_boulder(font_grade):
                                     '5b+':1,
                                     '5b':1,
                                     '5a+':0,
-                                    '5a':0}
+                                    '5a':0,
+                                    '3a':0}
 
     v_grade = font_v_boulder_conversion[font_grade.lower()]
     return v_grade
@@ -271,7 +272,7 @@ def home():
     # cur = conn.cursor()
 
     return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = thwart(session['user']),
-                                                                                b = response[0][0])))
+                                                                    b = response[0][0])))
 
 
 #Ticklist page
@@ -322,7 +323,11 @@ def ticklist(user):
 
     for row in ticks:
         table += '<tr>'
+        print row
         for num, item in enumerate(row):
+            if item == None:
+                item = 'n/a'
+
             if num == ticklist_columns.index('suggested_grade'):
                 table += '<td>V{a}</td>'.format(a = item)
             elif num == ticklist_columns.index('log_date'):
@@ -565,7 +570,7 @@ def admin_page():
 
                         #Climb Name
                         elif x == 5:
-                            climb_name = str(part).replace('</a></span></td>','').split('>')[-1].lower()
+                            climb_name = str(part).replace('</a></span></td>','').split('>')[-1].lower().replace("'",'&apos&')
 
                         #Crag
                         elif x == 9:
@@ -574,16 +579,13 @@ def admin_page():
                                 crag = txt.split(' / ')[0].lower().replace("'",'&apos&')
                                 sector = txt.split(' / ')[1].lower().replace("'",'&apos&')
 
-                                print sector, crag
-
                             else:
                                 crag_only = txt.lower().replace("'",'&apos&')
 
-                                print crag_only
 
                         #Comment
                         elif x == 13:
-                            comment = str(part).replace('</td>','').split('>')[-1]
+                            comment = str(part).replace('</td>','').split('>')[-1].replace("'",'&apos&')
 
                         #Stars
                         elif x == 15:
@@ -617,6 +619,7 @@ def admin_page():
                                         print '{a} added!'.format(a = crag)
 
                                     else:
+                                        print 'Abort 1'
                                         sys.exit()
 
                                 except psycopg2.DatabaseError as error:
@@ -626,34 +629,81 @@ def admin_page():
                                         print error
 
                                 #Add the climb, then the ascent
+                                if sector != None:
+                                    #Get newly created sector_id
+                                    cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(sector))
+
+                                elif crag_only != None:
+                                    #Get newly created sector_id
+                                    cur.execute("SELECT id FROM sectors WHERE crag_name = '{}' AND name IS NULL;".format(crag_only))
+
+                                sector_id = int(cur.fetchall()[0][0])
+
+                                #Insert the climb into climbs
+                                cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
+                                                                                                                                            sid = int(sector_id),
+                                                                                                                                            ctype = 'boulder'))
+
+                                #Get newly created climb_id
+                                cur.execute("SELECT id FROM climbs WHERE name = '{name}' and sector_id = {sid};".format(name = climb_name.replace("'", '&apos&'),
+                                                                                                                        sid = int(sector_id)))
+                                climb_id = cur.fetchall()[0][0]
+                                print "{} added!".format(climb_name)
+
+                                try:    
+                                    #Insert tick
+                                    cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
+                                                                                                                                                                                                                                                                climb_id = int(climb_id),
+                                                                                                                                                                                                                                                                comment = comment.replace("'",'&apos&'),
+                                                                                                                                                                                                                                                                log_date = date,
+                                                                                                                                                                                                                                                                log_type = 'send',
+                                                                                                                                                                                                                                                                suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
+                                                                                                                                                                                                                                                                stars = len(stars)))
+
+                                    print "Ascent of {} added!".format(climb_name)
+
+                                except psycopg2.DatabaseError as error:
+                                    if 'already exists' in str(error):
+                                        print '"{}" already exists in db'.format(climb_name)
+                                    else:
+                                        print error
+
+
+                            #----------------------------------------------------------------------
+                            #If the sector/crag is in the DB and there's only one record
+                            elif len(results) == 1:
+                                sector_id = int(results[0][0])
+
+                                #Check if the climb already exists
+                                cur.execute("SELECT * FROM climbs WHERE name = '{name}' AND sector_id = '{sid}' AND climb_type = 'boulder';".format(name = climb_name,
+                                                                                                                                                sid = sector_id))
+
+                                climb_query = cur.fetchall()
+
+                                if len(climb_query) == 0:
+                                    #Insert the climb into climbs
+                                    cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
+                                                                                                                                                sid = sector_id,
+                                                                                                                                                ctype = 'boulder'))
+
+                                    cur.execute("SELECT * FROM climbs WHERE name = '{name}' AND sector_id = '{sid}' AND climb_type = 'boulder';".format(name = climb_name,
+                                                                                                                                                    sid = sector_id))
+
+                                    climb_query = cur.fetchall()
+
+                                climb_id = climb_query[0][0]
+
                                 try:
-                                    if sector != None:
-                                        #Get newly created sector_id
-                                        cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(sector))
-                                        sector_id = cur.fetchall()[0][0]
+                                    #Insert tick
+                                    cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
+                                                                                                                                                                                                                                                                climb_id = int(climb_id),
+                                                                                                                                                                                                                                                                comment = comment,
+                                                                                                                                                                                                                                                                log_date = date,
+                                                                                                                                                                                                                                                                log_type = 'send',
+                                                                                                                                                                                                                                                                suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
+                                                                                                                                                                                                                                                                stars = len(stars)))
 
-                                        #Insert the climb into climbs
-                                        cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
-                                                                                                                                                    sid = int(sector_id),
-                                                                                                                                                    ctype = 'boulder'))
-
-                                        #Get newly created climb_id
-                                        cur.execute("SELECT id FROM climbs WHERE name = '{name}' and sector_id = {sid};".format(name = climb_name.replace("'", '&apos&'),
-                                                                                                                                sid = int(sector_id)))
-                                        climb_id = cur.fetchall()[0][0]
-                                        print "{} added!".format(climb_name)
-
-                                        #Insert tick
-                                        cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
-                                                                                                                                                                                                                                                                    climb_id = int(climb_id),
-                                                                                                                                                                                                                                                                    comment = comment.replace("'",'&apos&'),
-                                                                                                                                                                                                                                                                    log_date = date,
-                                                                                                                                                                                                                                                                    log_type = 'send',
-                                                                                                                                                                                                                                                                    suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
-                                                                                                                                                                                                                                                                    stars = len(stars)))
-
-                                    elif crag_only != None:
-                                        pass
+                                    print "Ascent of {} added!".format(climb_name)
 
 
                                 except psycopg2.DatabaseError as error:
@@ -661,7 +711,7 @@ def admin_page():
                                         print '"{}" already exists in db'.format(climb_name)
                                     else:
                                         print error
-                            #----------------------------------------------------------------------
+
 
                         x += 1
                     print ''
