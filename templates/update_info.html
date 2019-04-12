@@ -64,14 +64,42 @@
 		</nav>
 
 		<br>
-
-		<!-- Ticklist -->
+		<!-- User info table -->
 		<div class= "container">
-			<div class= "panel-body">
-	            <table class= "table table-bordered table-striped dataTable table-hover table-condensed" id="ticky_table">
-	                {{ main_page }}
-	          	</table>
-	        </div>
+			<div class = "col-sm-12">
+				<table class= "table table-bordered table-striped dataTable table-hover table-condensed" >
+					<thead class= "thead-dark">
+						<th> {{ username }} Info </th>
+						<th></th>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Username</td>
+							<td>{{ username }}</td>
+						</tr>
+						<tr>
+							<td>First Name</td>
+							<td>{{ fname }}</td>
+						</tr>
+						<tr>
+							<td>Last Name</td>
+							<td>{{ lname }}</td>
+						</tr>
+						<tr>
+							<td>Date Of Birth</td>
+							<td>{{ dob }}</td>
+						</tr>
+						<tr>
+							<td>Height</td>
+							<td>{{ height }} inches</td>
+						</tr>
+						<tr>
+							<td>Weight</td>
+							<td>{{ weight }} pounds</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
 		</div>
     </body>
 </html>
