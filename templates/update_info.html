@@ -64,10 +64,90 @@
 		</nav>
 
 		<br>
-		<!-- User info table -->
 		<div class= "container">
+			<h2>Update Information</h2>
+			<br>
 			<div class = "col-sm-12">
-				<table class= "table table-bordered table-striped dataTable table-hover table-condensed" >
+				<form>
+					<div class="form-row">
+						<div class="form-group col-md-12">
+							<label for="firstName">First Name</label>
+							<input type="text" class="form-control" name="inputFirstName" id="inputFirstName" value={{ fname }}>
+						</div>
+						<br>
+						<div class="form-group col-md-12">
+							<label for="lastName">Last Name</label>
+							<input type="text" class="form-control" name="inputLastName" id="inputLastName" value={{ lname }}>
+						</div>
+						<br>
+						<div class="form-group col-md-12">
+							<label for="email">Email</label>
+							<input type="text" class="form-control" name="inputEmail" id="inputEmail" value={{ email }}>
+						</div>
+						<br>
+						<div class="form-group col-md-12">
+							<label for="dob">Date Of Birth</label>
+							<input type="date" class="form-control" name="inputDOB" id="inputDOB" value={{ dob }}>
+						</div>
+						<br>
+						<div class="form-group col-md-12">
+							<label for="height">Height</label>
+							<input type="text" class="form-control" name="inputHeight" id="inputHeight" value={{ height }}>
+						</div>
+						<br>
+						<div class="form-group col-md-12">
+							<label for="weight">Weight</label>
+							<input type="text" class="form-control" name="inputWeight" id="inpuWeight" value={{ weight }}>
+						</div>
+					</div>
+					<button type="submit" class="btn btn-primary" formmethod="post">Update Info</button>
+				</form>
+			</div>
+			<br>
+            {% if info_error %}
+                <div class= "alert alert-danger">
+                    <p class="error"><strong>Error:</strong> {{ info_error }}
+                </div>
+            {% endif %}
+            {% if info_success %}
+                <div class= "alert alert-success">
+                    <p class="success"><strong></strong> {{ info_success }}
+                </div>
+            {% endif %}
+		</div>
+		<br>
+		<br>
+		<div class= "container">
+			<h2>Update Password</h2>
+			<br>
+			<div class = "col-sm-12">
+				<form>
+					<div class="form-row">
+						<div class="form-group col-md-12">
+							<label for="newPassword1">New Password</label>
+							<input type="password" class="form-control" name="inputPassword1" id="inputPassword1">
+							<br>
+							<label for="newPassword2">Repeat Password</label>
+							<input type="password" class="form-control" name="inputPassword2" id="inputPassword2">
+						</div>
+					</div>
+					<button type="submit" class="btn btn-warning" formmethod="post">Update Password</button>
+				</form>
+			</div>
+			<br>
+            {% if password_error %}
+                <div class= "alert alert-danger">
+                    <p class="error"><strong>Error:</strong> {{ password_error }}
+                </div>
+            {% endif %}
+            {% if password_success %}
+                <div class= "alert alert-success">
+                    <p class="success"><strong></strong> {{ password_success }}
+                </div>
+            {% endif %}
+		</div>
+
+				<!-- <table class= "table table-bordered table-striped dataTable table-hover table-condensed" >
 					<thead class= "thead-dark">
 						<th> {{ username }} Info </th>
 						<th></th>
@@ -98,7 +178,7 @@
 							<td>{{ weight }} pounds</td>
 						</tr>
 					</tbody>
-				</table>
+				</table> -->
 			</div>
 		</div>
     </body>

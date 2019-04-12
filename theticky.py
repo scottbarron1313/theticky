@@ -197,7 +197,7 @@ def login():
             else:
                 if sha256_crypt.verify(request.form['password'], response[0][1])== True:
                     session['logged_in'] = True
-                    session['user']= request.form['username']
+                    session['user'] = request.form['username']
                     login_cur.close()
                     login_conn.close()
                     gc.collect()
@@ -209,29 +209,35 @@ def login():
 
         #Creates a new user
         elif 'new_username' in request.form:
-            new_username= request.form['new_username']
+            new_username = request.form['new_username']
             if ' ' in new_username:
-                error= 'Please enter a username without spaces'
-                return render_template('login_new.html', error= error)
+                error = 'Please enter a username without spaces'
+                return render_template('login_new.html', error = error)
 
-            new_password= sha256_crypt.encrypt(str(request.form['new_password']))
-            new_email= request.form['new_email']
+            new_password = sha256_crypt.encrypt(str(request.form['new_password']))
+            new_email = request.form['new_email']
 
             #Create new account
-            login_cur.execute('''SELECT username FROM users where username= '{username}';'''.format(username= thwart(new_username)))
-            existing_username= login_cur.fetchall()
-            login_cur.execute('''SELECT email FROM users where email= '{email}';'''.format(email= thwart(new_email)))
-            existing_email= login_cur.fetchall()
+            login_cur.execute('''SELECT username FROM users where username = '{username}';'''.format(username = thwart(new_username)))
+            existing_username = login_cur.fetchall()
+            login_cur.execute('''SELECT email FROM users where email = '{email}';'''.format(email = thwart(new_email)))
+            existing_email = login_cur.fetchall()
 
             if len(existing_username)!= 0 or len(existing_email)!= 0:
-                error= 'Account already exists!'
-                return render_template('login_new.html', error= error)
+                error = 'Account already exists!'
+                return render_template('login_new.html', error = error)
 
-            login_cur.execute('''INSERT INTO users (username, password, email) 
-                                    VALUES ('{username}', '{password}', '{email}')'''.format(username= thwart(new_username),
-                                                                                             password= thwart(new_password),
-                                                                                             email= thwart(new_email)))
-            success= 'Account Created!'
+            login_cur.execute('''INSERT INTO users (username, password, email, firstname, lastname, dob, height, weight) 
+                                    VALUES ('{username}', '{password}', '{email}', '{firstname}', '{lastname}', '{dob}', {height}, {weight});'''.format(username = thwart(new_username),
+                                                                                                                                                         password = thwart(new_password),
+                                                                                                                                                         email = thwart(new_email),
+                                                                                                                                                         firstname = thwart(request.form['new_firstname']),
+                                                                                                                                                         lastname = thwart(request.form['new_lastname']),
+                                                                                                                                                         dob = request.form['new_dob'],
+                                                                                                                                                         height = request.form['new_height'],
+                                                                                                                                                         weight = request.form['new_weight']))
+            new_success = 'Account Created!'
+            return render_template('login_new.html', new_success = new_success)
 
         #Forgot login section
         #Still needs work
@@ -271,7 +277,7 @@ def home():
     # # conn.cur will return a cur object, you can use this cur to perform queries
     # cur = conn.cursor()
 
-    return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = thwart(session['user']),
+    return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = session['user'],
                                                                     b = response[0][0])))
 
 
@@ -323,7 +329,6 @@ def ticklist(user):
 
     for row in ticks:
         table += '<tr>'
-        print row
         for num, item in enumerate(row):
             if item == None:
                 item = 'n/a'
@@ -355,7 +360,7 @@ def ticklist(user):
                                                      dob = dob,
                                                      height = height,
                                                      weight = weight, 
-                                                     user_url = '/update_info/{}'.format(user))
+                                                     user_url = '/update_info')
 
 
 
@@ -405,16 +410,14 @@ def add_boulder_ascent():
         return render_template("add_boulder_ascent.html", success = success, 
                                                             cs_list = Markup(cs_list), 
                                                             username = current_user, 
-                                                            user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                        b = user_id))
+                                                            user_url = '/update_info')
 
     #Information needed: user_id, climb_id (if exists), comment, log_date, log_type, suggested_grade
     #If climb_id doesn't exists, we may need to add crag information too
 
     return render_template("add_boulder_ascent.html", cs_list = Markup(cs_list), 
                                                         username = current_user, 
-                                                        user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                    b = user_id))
+                                                        user_url = '/update_info')
 
 #Add ascent
 @app.route("/add_sport", methods = ["GET", "POST"])
@@ -463,16 +466,14 @@ def add_sport_ascent():
         return render_template("add_sport_ascent.html", success = success, 
                                                         cs_list = Markup(cs_list), 
                                                         username = current_user,
-                                                        user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                    b = user_id))
+                                                        user_url = '/update_info')
 
     #Information needed: user_id, climb_id (if exists), comment, log_date, log_type, suggested_grade
     #If climb_id doesn't exists, we may need to add crag information too
 
 
     return render_template("add_sport_ascent.html", username = current_user,
-                                                    user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                b = user_id))
+                                                    user_url = '/update_info')
 
 #Add ascent
 @app.route("/add_trad", methods = ["GET", "POST"])
@@ -521,16 +522,14 @@ def add_trad_ascent():
         return render_template("add_trad_ascent.html", success = success, 
                                                         cs_list = Markup(cs_list), 
                                                         username = current_user,
-                                                        user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                    b = user_id))
+                                                        user_url = '/update_info')
 
     #Information needed: user_id, climb_id (if exists), comment, log_date, log_type, suggested_grade
     #If climb_id doesn't exists, we may need to add crag information too
 
 
     return render_template("add_trad_ascent.html", username = current_user,
-                                                    user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                b = user_id))
+                                                    user_url = '/update_info')
 
 #Add ascent
 @app.route("/import_ticklist", methods = ["GET", "POST"])
@@ -796,12 +795,10 @@ def import_ticklist():
 
         return render_template("import_ticklist.html", success = 'Ticklist imported!', 
                                                         username = current_user,
-                                                        user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                    b = user_id))
+                                                        user_url = '/update_info')
 
     return render_template("import_ticklist.html", username = current_user,
-                                                    user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                                b = user_id))
+                                                    user_url = '/update_info')
 
 #Add ascent
 @app.route("/climb/<climb_id>", methods = ["GET", "POST"])
@@ -854,14 +851,13 @@ def climb_page(climb_id):
 
     return render_template("climb_page.html", main_page = Markup(table), 
                                                 username = current_user,
-                                                user_url = '/update_info/{a}_{b}'.format(a = current_user,
-                                                                                            b = user_id))
+                                                user_url = '/update_info')
 
 
 #Need a page to update user info
-@app.route("/update_info/<user>", methods = ["GET"])
+@app.route("/update_info", methods = ["GET", "POST"])
 @login_required
-def update_info(user):
+def update_info():
     # get a connection, if a connect cannot be made an exception will be raised here
     url = urlparse.urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
@@ -871,22 +867,110 @@ def update_info(user):
                             port=url.port)
 
     conn.autocommit = True
+    cur = conn.cursor()
 
     current_user = thwart(session['user'])
-    user_id = user.split('_')[-1]
+    cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
+    user_id = cur.fetchall()[0][0]
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
 
     #------------------------------------------
     #User info
-    cur.execute("SELECT firstname, lastname, dob, height, weight FROM users WHERE id = {};".format(user_id))
+    cur.execute("SELECT firstname, lastname, dob, height, weight, email FROM users WHERE id = {};".format(user_id))
     info = cur.fetchall()[0]
     firstname = info[0]
     lastname = info[1]
     dob = info[2]
     height = info[3]
     weight = info[4]
+    email = info[5]
+
+    if request.method == "POST":
+        #Check for user information update:
+        if 'inputFirstName' in request.form:
+            try:
+                cur.execute("UPDATE users SET firstname = '{firstname}', lastname = '{lastname}', email = '{email}', dob = '{dob}', height = {height}, weight = {weight}  WHERE id = '{Id}';".format(firstname = thwart(request.form['inputFirstName']),
+                                                                                                                                                                                                    lastname = thwart(request.form['inputLastName']),
+                                                                                                                                                                                                    email = thwart(request.form['inputEmail']),
+                                                                                                                                                                                                    dob = thwart(request.form['inputDOB']),
+                                                                                                                                                                                                    height = height,
+                                                                                                                                                                                                    weight = weight,
+                                                                                                                                                                                                    Id = user_id))
+
+                cur.execute("SELECT firstname, lastname, dob, height, weight, email FROM users WHERE id = {};".format(user_id))
+                info = cur.fetchall()[0]
+                firstname = info[0]
+                lastname = info[1]
+                dob = info[2]
+                height = info[3]
+                weight = info[4]
+                email = info[5]
+
+                return render_template("update_info.html", username = current_user,
+                                                     fname = firstname,
+                                                     lname = lastname,
+                                                     dob = dob,
+                                                     height = height,
+                                                     weight = weight, 
+                                                     email = email,
+                                                     user_url = '/update_info',
+                                                     info_success = 'Information Updated!')
+
+            except psycopg2.DatabaseError as error:
+                return render_template("update_info.html", username = current_user,
+                                                     fname = firstname,
+                                                     lname = lastname,
+                                                     dob = dob,
+                                                     height = height,
+                                                     weight = weight, 
+                                                     email = email,
+                                                     user_url = '/update_info',
+                                                     info_error = 'Information Failed To Update!')
+
+
+
+        #Check for password update
+        elif 'inputPassword1' in request.form:
+            #Make sure passwords match and if so, update password
+            if request.form['inputPassword1'] == request.form['inputPassword2']:
+                new_password = sha256_crypt.encrypt(str(request.form['inputPassword1']))
+                try: 
+                    cur.execute("UPDATE users SET password = '{password}' WHERE id = '{Id}';".format(password = thwart(new_password),
+                                                                                                    Id = user_id))
+
+                    return render_template("update_info.html", username = current_user,
+                                                                 fname = firstname,
+                                                                 lname = lastname,
+                                                                 dob = dob,
+                                                                 height = height,
+                                                                 weight = weight, 
+                                                                 email = email,
+                                                                 user_url = '/update_info',
+                                                                 password_success = 'Password updated!')
+
+                except psycopg2.DatabaseError as error:
+                    return render_template("update_info.html", username = current_user,
+                                                                 fname = firstname,
+                                                                 lname = lastname,
+                                                                 dob = dob,
+                                                                 height = height,
+                                                                 weight = weight, 
+                                                                 email = email,
+                                                                 user_url = '/update_info',
+                                                                 password_error = 'Update failed!')
+
+            else:
+                return render_template("update_info.html", username = current_user,
+                                                     fname = firstname,
+                                                     lname = lastname,
+                                                     dob = dob,
+                                                     height = height,
+                                                     weight = weight, 
+                                                     email = email,
+                                                     user_url = '/update_info',
+                                                     password_error = 'New Passwords Did Not Match!')
 
 
     return render_template("update_info.html", username = current_user,
@@ -895,7 +979,8 @@ def update_info(user):
                                                      dob = dob,
                                                      height = height,
                                                      weight = weight, 
-                                                     user_url = '/update_info/{}'.format(user))
+                                                     email = email,
+                                                     user_url = '/update_info')
 
 
 
@@ -915,303 +1000,313 @@ def update_info(user):
 
 
 
-@app.route("/admin", methods = ["GET", "POST"])
-@login_required
-def admin_page():
 
-    #--------------
-    #Will eventually want to assert that user is an admin to access the page
-    #--------------
 
-    # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
-    conn = psycopg2.connect(database = url.path[1:],
-                            user = url.username,
-                            password = url.password,
-                            host = url.hostname,
-                            port = url.port)
 
-    conn.autocommit = True
 
-    # conn.cur will return a cur object, you can use this cur to perform queries
-    cur = conn.cursor()
 
-    current_user = thwart(session['user'])
 
-    cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
-    user_id = cur.fetchall()[0][0]
 
-    if request.method == "POST":
-        if len(request.form['inputClimbs']) > 0:
-            url = request.form['inputClimbs']
-        elif len(request.form['inputTicklist']) > 0:
-            url = request.form['inputTicklist']
 
-        html = BeautifulSoup(simple_get(url), 'html5lib')
+
+
+# @app.route("/admin", methods = ["GET", "POST"])
+# @login_required
+# def admin_page():
+
+#     #--------------
+#     #Will eventually want to assert that user is an admin to access the page
+#     #--------------
+
+#     # get a connection, if a connect cannot be made an exception will be raised here
+#     url = urlparse.urlparse(os.environ['DATABASE_URL'])
+#     conn = psycopg2.connect(database = url.path[1:],
+#                             user = url.username,
+#                             password = url.password,
+#                             host = url.hostname,
+#                             port = url.port)
+
+#     conn.autocommit = True
+
+#     # conn.cur will return a cur object, you can use this cur to perform queries
+#     cur = conn.cursor()
+
+#     current_user = thwart(session['user'])
+
+#     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
+#     user_id = cur.fetchall()[0][0]
+
+#     if request.method == "POST":
+#         if len(request.form['inputClimbs']) > 0:
+#             url = request.form['inputClimbs']
+#         elif len(request.form['inputTicklist']) > 0:
+#             url = request.form['inputTicklist']
+
+#         html = BeautifulSoup(simple_get(url), 'html5lib')
         
-        if len(request.form['inputClimbs']) > 0:
-            climb_rows = html.findAll("tr", {"class": "Height20"})
-        elif len(request.form['inputTicklist']) > 0:
-            climb_rows = html.findAll('tr')
+#         if len(request.form['inputClimbs']) > 0:
+#             climb_rows = html.findAll("tr", {"class": "Height20"})
+#         elif len(request.form['inputTicklist']) > 0:
+#             climb_rows = html.findAll('tr')
 
-        areas = []
+#         areas = []
 
-        #grades and grade_count are used when uploading your ticklist from 8A. Have to use this method to include the 
-        #grades assigned by the user
-        grades = []
-        grade_count = 0
-        for row in climb_rows:
-            if len(request.form['inputClimbs']) > 0:
-                if row.a.contents[0] not in ['Advance Search', 'Grade']:
-                    if len(row.text.split('/')) == 1:
-                        continue
-                    crag = row.text.split('/')[1][:-4].lower().replace("'","&apos&")
-                    if crag[0] == ' ':
-                        crag = crag[1:]
+#         #grades and grade_count are used when uploading your ticklist from 8A. Have to use this method to include the 
+#         #grades assigned by the user
+#         grades = []
+#         grade_count = 0
+#         for row in climb_rows:
+#             if len(request.form['inputClimbs']) > 0:
+#                 if row.a.contents[0] not in ['Advance Search', 'Grade']:
+#                     if len(row.text.split('/')) == 1:
+#                         continue
+#                     crag = row.text.split('/')[1][:-4].lower().replace("'","&apos&")
+#                     if crag[0] == ' ':
+#                         crag = crag[1:]
 
-                    if crag not in areas:
-                        try:
-                            str(crag)
-                        except:
-                            continue
+#                     if crag not in areas:
+#                         try:
+#                             str(crag)
+#                         except:
+#                             continue
 
-                    # try:
-                    #     cur.execute("INSERT INTO sectors (name, state, country, crag_name) VALUES ('{sector}', '{state}', '{country}', '{crag_name}');".format(sector = crag,
-                    #                                                                                                                                             state = 'ca',
-                    #                                                                                                                                             country = 'usa',
-                    #                                                                                                                                             crag_name = 'yosemite valley'))
+#                     # try:
+#                     #     cur.execute("INSERT INTO sectors (name, state, country, crag_name) VALUES ('{sector}', '{state}', '{country}', '{crag_name}');".format(sector = crag,
+#                     #                                                                                                                                             state = 'ca',
+#                     #                                                                                                                                             country = 'usa',
+#                     #                                                                                                                                             crag_name = 'yosemite valley'))
                     
-                    #     print '{} added!'.format(crag)
+#                     #     print '{} added!'.format(crag)
 
-                    # except psycopg2.DatabaseError as error:
-                    #     if 'already exists' in str(error):
-                    #         print '{} already exists in db'.format(crag)
-                    #     else:
-                    #         print error
+#                     # except psycopg2.DatabaseError as error:
+#                     #     if 'already exists' in str(error):
+#                     #         print '{} already exists in db'.format(crag)
+#                     #     else:
+#                     #         print error
 
-                    areas.append(crag)
+#                     areas.append(crag)
 
-            elif len(request.form['inputTicklist']) > 0:
-                if len(row) != 19:
-                    if 'AscentPyramid' in str(row):
-                        grade = str(row).replace('<tr><td>','').split('</td>')[0]
-                        if len(grade) < 4:
-                            grades.append(grade)
+#             elif len(request.form['inputTicklist']) > 0:
+#                 if len(row) != 19:
+#                     if 'AscentPyramid' in str(row):
+#                         grade = str(row).replace('<tr><td>','').split('</td>')[0]
+#                         if len(grade) < 4:
+#                             grades.append(grade)
 
-                    else:
-                        if 'AscentListHeadRow' in str(row):
-                            grade_count += 1
-
-
-                if len(row) == 19:
-                    x = 0
-                    crag = None
-                    sector = None
-                    crag_only = None
-
-                    for part in row:
-                        #Ascent Date
-                        if x == 1:
-                            if '<nobr>' in str(part):
-                                part = str(part).replace('<i>','')
-                                date = part.split('<nobr>')[1][0:8]
-                            else:
-                                date = str(part).split('<i>')[1][0:8]
-
-                            if int(date[0:2]) > 50:
-                                year = int('19{}'.format(date[0:2]))
-                            else:
-                                year = int('20{}'.format(date[0:2]))
-                            date = '{year}{date}'.format(year = year,
-                                                         date = date[2:])
-
-                        #Climb Name
-                        elif x == 5:
-                            climb_name = str(part).replace('</a></span></td>','').split('>')[-1].lower().replace("'",'&apos&')
-
-                        #Crag
-                        elif x == 9:
-                            txt = str(part).replace('</span></td>','').replace('</a>','').split('>')[-1]
-                            if len(txt.split(' / ')) > 1:
-                                crag = txt.split(' / ')[0].lower().replace("'",'&apos&')
-                                sector = txt.split(' / ')[1].lower().replace("'",'&apos&')
-
-                            else:
-                                crag_only = txt.lower().replace("'",'&apos&')
+#                     else:
+#                         if 'AscentListHeadRow' in str(row):
+#                             grade_count += 1
 
 
-                        #Comment
-                        elif x == 13:
-                            comment = str(part).replace('</td>','').split('>')[-1].replace("'",'&apos&')
+#                 if len(row) == 19:
+#                     x = 0
+#                     crag = None
+#                     sector = None
+#                     crag_only = None
 
-                        #Stars
-                        elif x == 15:
-                            stars = str(part).replace('<td valign="baseline">','').split('<')[0]
+#                     for part in row:
+#                         #Ascent Date
+#                         if x == 1:
+#                             if '<nobr>' in str(part):
+#                                 part = str(part).replace('<i>','')
+#                                 date = part.split('<nobr>')[1][0:8]
+#                             else:
+#                                 date = str(part).split('<i>')[1][0:8]
 
-                            #Add data
-                            if sector != None:
-                                cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(sector))
-                            elif crag_only != None:
-                                cur.execute("SELECT id FROM sectors WHERE crag_name = '{}';".format(crag_only))
-                            else:
-                                sys.exit()
+#                             if int(date[0:2]) > 50:
+#                                 year = int('19{}'.format(date[0:2]))
+#                             else:
+#                                 year = int('20{}'.format(date[0:2]))
+#                             date = '{year}{date}'.format(year = year,
+#                                                          date = date[2:])
 
-                            results = cur.fetchall()
+#                         #Climb Name
+#                         elif x == 5:
+#                             climb_name = str(part).replace('</a></span></td>','').split('>')[-1].lower().replace("'",'&apos&')
 
-                            #----------------------------------------------------------------------
-                            #If this is a new sector/crag
-                            if len(results) == 0:
-                                #Add the sector/crag
-                                try:
-                                    if sector != None:
-                                        cur.execute("INSERT INTO sectors (name, crag_name) VALUES ('{sector}', '{crag_name}');".format(sector = sector,
-                                                                                                                                        crag_name = crag))
+#                         #Crag
+#                         elif x == 9:
+#                             txt = str(part).replace('</span></td>','').replace('</a>','').split('>')[-1]
+#                             if len(txt.split(' / ')) > 1:
+#                                 crag = txt.split(' / ')[0].lower().replace("'",'&apos&')
+#                                 sector = txt.split(' / ')[1].lower().replace("'",'&apos&')
 
-
-                                        print '{a} - {b} added!'.format(a = sector,
-                                                                        b = crag)
-                                    elif crag_only != None:
-                                        cur.execute("INSERT INTO sectors (crag_name) VALUES ('{crag_name}');".format(crag_name = crag_only))
-
-                                        print '{a} added!'.format(a = crag)
-
-                                    else:
-                                        print 'Abort 1'
-                                        sys.exit()
-
-                                except psycopg2.DatabaseError as error:
-                                    if 'already exists' in str(error):
-                                        print '{} already exists in db'.format(crag)
-                                    else:
-                                        print error
-
-                                #Add the climb, then the ascent
-                                if sector != None:
-                                    #Get newly created sector_id
-                                    cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(sector))
-
-                                elif crag_only != None:
-                                    #Get newly created sector_id
-                                    cur.execute("SELECT id FROM sectors WHERE crag_name = '{}' AND name IS NULL;".format(crag_only))
-
-                                sector_id = int(cur.fetchall()[0][0])
-
-                                #Insert the climb into climbs
-                                cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
-                                                                                                                                            sid = int(sector_id),
-                                                                                                                                            ctype = 'boulder'))
-
-                                #Get newly created climb_id
-                                cur.execute("SELECT id FROM climbs WHERE name = '{name}' and sector_id = {sid};".format(name = climb_name.replace("'", '&apos&'),
-                                                                                                                        sid = int(sector_id)))
-                                climb_id = cur.fetchall()[0][0]
-                                print "{} added!".format(climb_name)
-
-                                try:    
-                                    #Insert tick
-                                    cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
-                                                                                                                                                                                                                                                                climb_id = int(climb_id),
-                                                                                                                                                                                                                                                                comment = comment.replace("'",'&apos&'),
-                                                                                                                                                                                                                                                                log_date = date,
-                                                                                                                                                                                                                                                                log_type = 'send',
-                                                                                                                                                                                                                                                                suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
-                                                                                                                                                                                                                                                                stars = len(stars)))
-
-                                    print "Ascent of {} added!".format(climb_name)
-
-                                except psycopg2.DatabaseError as error:
-                                    if 'already exists' in str(error):
-                                        print '"{}" already exists in db'.format(climb_name)
-                                    else:
-                                        print error
+#                             else:
+#                                 crag_only = txt.lower().replace("'",'&apos&')
 
 
-                            #----------------------------------------------------------------------
-                            #If the sector/crag is in the DB and there's only one record
-                            elif len(results) == 1:
-                                sector_id = int(results[0][0])
+#                         #Comment
+#                         elif x == 13:
+#                             comment = str(part).replace('</td>','').split('>')[-1].replace("'",'&apos&')
 
-                                #Check if the climb already exists
-                                cur.execute("SELECT * FROM climbs WHERE name = '{name}' AND sector_id = '{sid}' AND climb_type = 'boulder';".format(name = climb_name,
-                                                                                                                                                sid = sector_id))
+#                         #Stars
+#                         elif x == 15:
+#                             stars = str(part).replace('<td valign="baseline">','').split('<')[0]
 
-                                climb_query = cur.fetchall()
+#                             #Add data
+#                             if sector != None:
+#                                 cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(sector))
+#                             elif crag_only != None:
+#                                 cur.execute("SELECT id FROM sectors WHERE crag_name = '{}';".format(crag_only))
+#                             else:
+#                                 sys.exit()
 
-                                if len(climb_query) == 0:
-                                    #Insert the climb into climbs
-                                    cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
-                                                                                                                                                sid = sector_id,
-                                                                                                                                                ctype = 'boulder'))
+#                             results = cur.fetchall()
 
-                                    cur.execute("SELECT * FROM climbs WHERE name = '{name}' AND sector_id = '{sid}' AND climb_type = 'boulder';".format(name = climb_name,
-                                                                                                                                                    sid = sector_id))
-
-                                    climb_query = cur.fetchall()
-
-                                climb_id = climb_query[0][0]
-
-                                try:
-                                    #Insert tick
-                                    cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
-                                                                                                                                                                                                                                                                climb_id = int(climb_id),
-                                                                                                                                                                                                                                                                comment = comment,
-                                                                                                                                                                                                                                                                log_date = date,
-                                                                                                                                                                                                                                                                log_type = 'send',
-                                                                                                                                                                                                                                                                suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
-                                                                                                                                                                                                                                                                stars = len(stars)))
-
-                                    print "Ascent of {} added!".format(climb_name)
+#                             #----------------------------------------------------------------------
+#                             #If this is a new sector/crag
+#                             if len(results) == 0:
+#                                 #Add the sector/crag
+#                                 try:
+#                                     if sector != None:
+#                                         cur.execute("INSERT INTO sectors (name, crag_name) VALUES ('{sector}', '{crag_name}');".format(sector = sector,
+#                                                                                                                                         crag_name = crag))
 
 
-                                except psycopg2.DatabaseError as error:
-                                    if 'already exists' in str(error):
-                                        print '"{}" already exists in db'.format(climb_name)
-                                    else:
-                                        print error
+#                                         print '{a} - {b} added!'.format(a = sector,
+#                                                                         b = crag)
+#                                     elif crag_only != None:
+#                                         cur.execute("INSERT INTO sectors (crag_name) VALUES ('{crag_name}');".format(crag_name = crag_only))
+
+#                                         print '{a} added!'.format(a = crag)
+
+#                                     else:
+#                                         print 'Abort 1'
+#                                         sys.exit()
+
+#                                 except psycopg2.DatabaseError as error:
+#                                     if 'already exists' in str(error):
+#                                         print '{} already exists in db'.format(crag)
+#                                     else:
+#                                         print error
+
+#                                 #Add the climb, then the ascent
+#                                 if sector != None:
+#                                     #Get newly created sector_id
+#                                     cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(sector))
+
+#                                 elif crag_only != None:
+#                                     #Get newly created sector_id
+#                                     cur.execute("SELECT id FROM sectors WHERE crag_name = '{}' AND name IS NULL;".format(crag_only))
+
+#                                 sector_id = int(cur.fetchall()[0][0])
+
+#                                 #Insert the climb into climbs
+#                                 cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
+#                                                                                                                                             sid = int(sector_id),
+#                                                                                                                                             ctype = 'boulder'))
+
+#                                 #Get newly created climb_id
+#                                 cur.execute("SELECT id FROM climbs WHERE name = '{name}' and sector_id = {sid};".format(name = climb_name.replace("'", '&apos&'),
+#                                                                                                                         sid = int(sector_id)))
+#                                 climb_id = cur.fetchall()[0][0]
+#                                 print "{} added!".format(climb_name)
+
+#                                 try:    
+#                                     #Insert tick
+#                                     cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
+#                                                                                                                                                                                                                                                                 climb_id = int(climb_id),
+#                                                                                                                                                                                                                                                                 comment = comment.replace("'",'&apos&'),
+#                                                                                                                                                                                                                                                                 log_date = date,
+#                                                                                                                                                                                                                                                                 log_type = 'send',
+#                                                                                                                                                                                                                                                                 suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
+#                                                                                                                                                                                                                                                                 stars = len(stars)))
+
+#                                     print "Ascent of {} added!".format(climb_name)
+
+#                                 except psycopg2.DatabaseError as error:
+#                                     if 'already exists' in str(error):
+#                                         print '"{}" already exists in db'.format(climb_name)
+#                                     else:
+#                                         print error
 
 
-                        x += 1
-                    print ''
+#                             #----------------------------------------------------------------------
+#                             #If the sector/crag is in the DB and there's only one record
+#                             elif len(results) == 1:
+#                                 sector_id = int(results[0][0])
+
+#                                 #Check if the climb already exists
+#                                 cur.execute("SELECT * FROM climbs WHERE name = '{name}' AND sector_id = '{sid}' AND climb_type = 'boulder';".format(name = climb_name,
+#                                                                                                                                                 sid = sector_id))
+
+#                                 climb_query = cur.fetchall()
+
+#                                 if len(climb_query) == 0:
+#                                     #Insert the climb into climbs
+#                                     cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
+#                                                                                                                                                 sid = sector_id,
+#                                                                                                                                                 ctype = 'boulder'))
+
+#                                     cur.execute("SELECT * FROM climbs WHERE name = '{name}' AND sector_id = '{sid}' AND climb_type = 'boulder';".format(name = climb_name,
+#                                                                                                                                                     sid = sector_id))
+
+#                                     climb_query = cur.fetchall()
+
+#                                 climb_id = climb_query[0][0]
+
+#                                 try:
+#                                     #Insert tick
+#                                     cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
+#                                                                                                                                                                                                                                                                 climb_id = int(climb_id),
+#                                                                                                                                                                                                                                                                 comment = comment,
+#                                                                                                                                                                                                                                                                 log_date = date,
+#                                                                                                                                                                                                                                                                 log_type = 'send',
+#                                                                                                                                                                                                                                                                 suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
+#                                                                                                                                                                                                                                                                 stars = len(stars)))
+
+#                                     print "Ascent of {} added!".format(climb_name)
+
+
+#                                 except psycopg2.DatabaseError as error:
+#                                     if 'already exists' in str(error):
+#                                         print '"{}" already exists in db'.format(climb_name)
+#                                     else:
+#                                         print error
+
+
+#                         x += 1
+#                     print ''
 
 
 
-        for area in areas:
-            print area
-            cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(area))
-            sector_id = cur.fetchall()[0][0]
-            for row in climb_rows:
-                if row.a.contents[0] not in ['Advance Search', 'Grade']:
-                    climb_name = row.a.contents[0].lower().replace('*','').replace("'","&apos&")
-                    if len(row.text.split('/')) == 1:
-                        continue
-                    crag = row.text.split('/')[1][:-4].lower()
-                    if crag[0] == ' ':
-                        crag = crag[1:]
+#         for area in areas:
+#             print area
+#             cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(area))
+#             sector_id = cur.fetchall()[0][0]
+#             for row in climb_rows:
+#                 if row.a.contents[0] not in ['Advance Search', 'Grade']:
+#                     climb_name = row.a.contents[0].lower().replace('*','').replace("'","&apos&")
+#                     if len(row.text.split('/')) == 1:
+#                         continue
+#                     crag = row.text.split('/')[1][:-4].lower()
+#                     if crag[0] == ' ':
+#                         crag = crag[1:]
 
-                    if crag == area:
-                        try:
-                            str(climb_name)
-                        except:
-                            continue
+#                     if crag == area:
+#                         try:
+#                             str(climb_name)
+#                         except:
+#                             continue
 
-                        # try:
-                        #     cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
-                        #                                                                                                                 sid = sector_id,
-                        #                                                                                                                 ctype = 'boulder'))
-                        #     print "{} added!".format(climb_name)
-                        # except psycopg2.DatabaseError as error:
-                        #     if 'already exists' in str(error):
-                        #         print '"{}" already exists in db'.format(climb_name)
-                        #     else:
-                        #         print error
+#                         # try:
+#                         #     cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
+#                         #                                                                                                                 sid = sector_id,
+#                         #                                                                                                                 ctype = 'boulder'))
+#                         #     print "{} added!".format(climb_name)
+#                         # except psycopg2.DatabaseError as error:
+#                         #     if 'already exists' in str(error):
+#                         #         print '"{}" already exists in db'.format(climb_name)
+#                         #     else:
+#                         #         print error
 
-            print ''
+#             print ''
 
-        return render_template('admin_page.html', success = 'Climbs added', username = current_user)
+#         return render_template('admin_page.html', success = 'Climbs added', username = current_user)
 
-    return render_template('admin_page.html', username = current_user)
+#     return render_template('admin_page.html', username = current_user)
 
-# # Update areas json
+# # # Update areas json
 # @app.route("/admin", methods = ["GET", "POST"])
 # def admin_page():
 #     url = urlparse.urlparse(os.environ['DATABASE_URL'])

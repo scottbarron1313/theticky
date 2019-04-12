@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-    </head>
+    <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,6 +16,7 @@
 
         <!-- jquery -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js" integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E=" crossorigin="anonymous"></script>
 
         <!-- Popper JS -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
@@ -26,6 +27,9 @@
         <!-- Leaflet -->
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css"/>
         <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+
+        <!-- Typeahead plugin -->
+        <script src="/static/bootstrap3-typeahead.js"></script>
     </head>
 
 
@@ -66,14 +70,37 @@
         <div class="container">
             <h1>Welcome to The Ticky!</h1>
             <br>
-            <b>Ticky Member Login:</b>
-            <form action="" method="post">
-                <input type="text" placeholder="Username" name="username" required>
+            <div class= "container">
+                <h2>Login:</h2>
                 <br>
-                <input type="password" placeholder="Password" name="password" required>
+                <div class = "col-sm-12">
+                    <form>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control" name="username" id="username" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" name="password" id="password" required>
+                            </div>
+                            <br>
+                        </div>
+                        <button type="submit" class="btn btn-primary" formmethod="post">Login</button>
+                    </form>
+                </div>
                 <br>
-                <input class="btn btn-primary" type="submit" name="login" value="Login">
-            </form>
+                {% if new_error %}
+                    <div class= "alert alert-danger">
+                        <p class="error"><strong>Error:</strong> {{ login_error }}
+                    </div>
+                {% endif %}
+                {% if new_success %}
+                    <div class= "alert alert-success">
+                        <p class="success"> {{ login_success }}
+                    </div>
+                {% endif %}
+            </div>
             <br>
             <br>
             <!-- Forgot your login?
@@ -84,28 +111,64 @@
             </form> -->
             <br>
             <br>
-            New to Ticky? Create an account:
-            <form action="" method="post">
-                <input type="text" placeholder="Username" name="new_username" required>
+            <div class= "container">
+                <h2>New to Ticky? Create an account:</h2>
                 <br>
-                <input type="password" placeholder="Password" name="new_password" required>
-                <br>
-                <input type= "text" placeholder="soft@boulders.com" name="new_email" required>
-                <br>
-                <input class="btn btn-dark" type="submit" name= "create_account" value="Create Account">
-            </form>
-            <br>
-            <br>
-            {% if error %}
-                <div class= "alert alert-danger"
-                    <p class="error"><strong>Error:</strong> {{ error }}
+                <div class = "col-sm-12">
+                    <form>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="new_username">Username</label>
+                                <input type="text" class="form-control" name="new_username" id="new_username" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="new_password">Password</label>
+                                <input type="password" class="form-control" name="new_password" id="new_password" required>
+                            </div>
+                            <br>
+                            <div class="form-group col-md-6">
+                                <label for="new_firstname">First Name</label>
+                                <input type="text" class="form-control" name="new_firstname" id="new_firstname" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="new_lastname">Last Name</label>
+                                <input type="text" class="form-control" name="new_lastname" id="new_lastname" required>
+                            </div>
+                            <br>
+                            <div class="form-group col-md-6">
+                                <label for="new_email">Email</label>
+                                <input type="text" class="form-control" name="new_email" id="new_email" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="new_dob">Date Of Birth</label>
+                                <input type="date" class="form-control" name="new_dob" id="new_dob" required>
+                            </div>
+                            <br>
+                            <div class="form-group col-md-6">
+                                <label for="new_height">Height (in inches)</label>
+                                <input type="number" min="24" step="1" class="form-control" name="new_height" id="new_height" value="60" required>
+                            </div>
+                            <br>
+                            <div class="form-group col-md-6">
+                                <label for="new_weight">Weight (in pounds)</label>
+                                <input type="number" min="50" step="1" class="form-control" name="new_weight" id="new_weight" value="100" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" formmethod="post">Create Account</button>
+                    </form>
                 </div>
-            {% endif %}
-            {% if success %}
-                <div class= "alert alert-success">
-                    <p class="success"><strong></strong> {{ success }}
-                </div>
-            {% endif %}
-        </div>
+                <br>
+                {% if new_error %}
+                    <div class= "alert alert-danger">
+                        <p class="error"><strong>Error:</strong> {{ info_error }}
+                    </div>
+                {% endif %}
+                {% if new_success %}
+                    <div class= "alert alert-success">
+                        <p class="success"> {{ info_success }}
+                    </div>
+                {% endif %}
+            </div>
+            <br>
     </body>
 </html>
