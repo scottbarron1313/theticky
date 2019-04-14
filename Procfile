@@ -1,1 +1,1 @@
-web: gunicorn -b :$PORT boulder_collective:app --preload
+web: gunicorn -b :$PORT theticky:app --preload
