@@ -1,2 +1,2 @@
 # theticky
-The Ticky, a web based database for storing climbing information using OSM.
+The Ticky, an online resource for climbing information.
