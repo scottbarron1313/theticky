@@ -276,8 +276,7 @@ def home():
     # # conn.cur will return a cur object, you can use this cur to perform queries
     # cur = conn.cursor()
 
-    return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = session['user'],
-                                                                    b = response[0][0])))
+    return redirect(url_for('ticklist', user = '{a}'.format(a = session['user'])))
 
 
 #Ticklist page
@@ -295,7 +294,8 @@ def ticklist(user):
     conn.autocommit = True
 
     current_user = session['user']
-    user_id = user.split('_')[-1]
+    cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
+    user_id = cur.fetchall()[0][0]
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
