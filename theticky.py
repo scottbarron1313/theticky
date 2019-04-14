@@ -11,7 +11,7 @@ from wtforms import Form
 #Use this to encrypt passwords
 from passlib.hash import sha256_crypt 
 #Use this to deal with SQL injection
-from MySQLdb import escape_string as thwart
+# from MySQLdb import escape_string as thwart
 import gc
 import requests
 from requests.exceptions import RequestException
@@ -20,9 +20,8 @@ from bs4 import BeautifulSoup
 
 from functools import wraps
 import argparse
-import folium
 from functools import wraps
-import urlparse
+from urllib.parse import urlparse
 import smtplib
 from email.mime.text import MIMEText
 import json
@@ -76,7 +75,7 @@ def log_error(e):
     This function just prints them, but you can
     make it do anything.
     """
-    print e
+    print(e)
 
 def v_to_font_boulder(v_grade):
     v_font_boulder_conversion = {17:'9a', 
@@ -154,7 +153,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-url = urlparse.urlparse(os.environ['DATABASE_URL'])
+url = urlparse(os.environ['DATABASE_URL'])
 
 #logout page
 @app.route('/logout')
@@ -168,10 +167,10 @@ def logout():
 def login():
     #Need to do this to run on local:
     #export DATABASE_URL=postgres://opimlbnkhudqpv:e2c778406ab743a2bcdef8ce2c07544ba66dc50a75c241e4929215b1b2198f83@ec2-107-21-108-204.compute-1.amazonaws.com:5432/df9g9j9vm0bu32
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
 
-    error= None
-    success= None
+    error = None
+    success = None
 
     if request.method == 'POST':
         session.pop('user', None)
@@ -189,9 +188,10 @@ def login():
         #Main login fucntion here
         if 'password' in request.form:
             #Check password
-            login_cur.execute("SELECT id, password FROM users WHERE username = '{username}'".format(username= thwart(request.form['username'])))
+            login_cur.execute("SELECT id, password FROM users WHERE username = %s;", (request.form['username'],))
             
             response = login_cur.fetchall()
+
             if len(response)== 0:
                 error = 'Incorrect Username/Password'
             else:
@@ -201,7 +201,7 @@ def login():
                     login_cur.close()
                     login_conn.close()
                     gc.collect()
-                    return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = thwart(session['user']),
+                    return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = session['user'], 
                                                                                 b = response[0][0])))
 
                 else:
@@ -218,24 +218,23 @@ def login():
             new_email = request.form['new_email']
 
             #Create new account
-            login_cur.execute('''SELECT username FROM users where username = '{username}';'''.format(username = thwart(new_username)))
+            login_cur.execute("SELECT username FROM users where username = %s;", (new_username,))
             existing_username = login_cur.fetchall()
-            login_cur.execute('''SELECT email FROM users where email = '{email}';'''.format(email = thwart(new_email)))
+            login_cur.execute("SELECT email FROM users where email = %s;", (new_email,))
             existing_email = login_cur.fetchall()
 
             if len(existing_username)!= 0 or len(existing_email)!= 0:
                 error = 'Account already exists!'
                 return render_template('login_new.html', error = error)
 
-            login_cur.execute('''INSERT INTO users (username, password, email, firstname, lastname, dob, height, weight) 
-                                    VALUES ('{username}', '{password}', '{email}', '{firstname}', '{lastname}', '{dob}', {height}, {weight});'''.format(username = thwart(new_username),
-                                                                                                                                                         password = thwart(new_password),
-                                                                                                                                                         email = thwart(new_email),
-                                                                                                                                                         firstname = thwart(request.form['new_firstname']),
-                                                                                                                                                         lastname = thwart(request.form['new_lastname']),
-                                                                                                                                                         dob = request.form['new_dob'],
-                                                                                                                                                         height = request.form['new_height'],
-                                                                                                                                                         weight = request.form['new_weight']))
+            login_cur.execute("INSERT INTO users (username, password, email, firstname, lastname, dob, height, weight) VALUES (%s, %s, %s, %s, %s, %s, %i, %i);", (new_username, 
+                                                                                                                                                                    new_password, 
+                                                                                                                                                                    new_email, 
+                                                                                                                                                                    request.form['new_firstname'], 
+                                                                                                                                                                    request.form['new_lastname'], 
+                                                                                                                                                                    request.form['new_dob'], 
+                                                                                                                                                                    request.form['new_height'], 
+                                                                                                                                                                    request.form['new_weight']))
             new_success = 'Account Created!'
             return render_template('login_new.html', new_success = new_success)
 
@@ -254,8 +253,8 @@ def login():
 
         #Catch all for any other scenario
         else:
-            print 'OTHER'
-            print request.form
+            print('OTHER')
+            print(request.form)
 
     return render_template('login_new.html', error= error, success= success)
 
@@ -286,7 +285,7 @@ def home():
 @login_required
 def ticklist(user):
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
                             user=url.username,
                             password=url.password,
@@ -295,7 +294,7 @@ def ticklist(user):
 
     conn.autocommit = True
 
-    current_user = thwart(session['user'])
+    current_user = session['user']
     user_id = user.split('_')[-1]
 
     # conn.cur will return a cur object, you can use this cur to perform queries
@@ -312,7 +311,7 @@ def ticklist(user):
     weight = info[4]
 
     #------------------------------------------
-    cur.execute('SELECT climbs.id as cid, ticks.log_date, climbs.name as climb, sectors.name as sector, sectors.crag_name, ticks.suggested_grade, ticks.comment FROM ticks INNER JOIN users ON ticks.user_id = users.id INNER JOIN climbs ON ticks.climb_id = climbs.id INNER JOIN sectors ON climbs.sector_id = sectors.id WHERE users.id = {};'.format(user_id))
+    cur.execute('SELECT climbs.id as cid, ticks.log_date, climbs.name as climb, sectors.name as sector, sectors.crag_name, ticks.suggested_grade, ticks.comment FROM ticks INNER JOIN users ON ticks.user_id = users.id INNER JOIN climbs ON ticks.climb_id = climbs.id INNER JOIN sectors ON climbs.sector_id = sectors.id WHERE users.id = {} ORDER BY ticks.log_date DESC;'.format(user_id))
 
     ticks = cur.fetchall()
 
@@ -341,11 +340,11 @@ def ticklist(user):
                 cid = item
             elif num == ticklist_columns.index('climb'):
                 table += '<td><a href= "/climb/{a}">{b}</a></td>'.format(a = cid,
-                                                                        b = item.replace('&apos&',"'").title())
+                                                                        b = item.replace('&apos&',"'").replace('&amp;',"'").title().replace("'S", "'s"))
             elif num == ticklist_columns.index('comment'):
                 table += '<td>{a}</td>'.format(a = item.replace('&apos&',"'"))
             elif num == ticklist_columns.index('crag_name'):
-                table += '<td>{a}</td>'.format(a = item.title().replace('&apos&',"'"))
+                table += '<td>{a}</td>'.format(a = item.replace('&apos&',"'").title().replace("'S", "'s"))
             else:
                 table += '<td>{a}</td>'.format(a = item.title())
         table += '</tr>'
@@ -370,7 +369,7 @@ def ticklist(user):
 def add_boulder_ascent():
 
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
                             user=url.username,
                             password=url.password,
@@ -381,7 +380,7 @@ def add_boulder_ascent():
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
-    current_user = thwart(session['user'])
+    current_user = session['user']
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -405,6 +404,7 @@ def add_boulder_ascent():
     climb_type = 'boulder'
 
 
+    #Doesn't actuall add a climb yet
     if request.method == "POST":
         success = 'Boulder added!'
         return render_template("add_boulder_ascent.html", success = success, 
@@ -425,7 +425,7 @@ def add_boulder_ascent():
 def add_sport_ascent():
 
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
                             user=url.username,
                             password=url.password,
@@ -436,7 +436,7 @@ def add_sport_ascent():
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
-    current_user = thwart(session['user'])
+    current_user = session['user']
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -462,7 +462,7 @@ def add_sport_ascent():
 
     if request.method == "POST":
         success = 'Sport climb added!'
-        print request.form
+        print(request.form)
         return render_template("add_sport_ascent.html", success = success, 
                                                         cs_list = Markup(cs_list), 
                                                         username = current_user,
@@ -481,7 +481,7 @@ def add_sport_ascent():
 def add_trad_ascent():
 
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
                             user=url.username,
                             password=url.password,
@@ -492,7 +492,7 @@ def add_trad_ascent():
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
-    current_user = thwart(session['user'])
+    current_user = session['user']
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -518,7 +518,7 @@ def add_trad_ascent():
 
     if request.method == "POST":
         success = 'Trad route added!'
-        print request.form
+        print(request.form)
         return render_template("add_trad_ascent.html", success = success, 
                                                         cs_list = Markup(cs_list), 
                                                         username = current_user,
@@ -536,12 +536,8 @@ def add_trad_ascent():
 @login_required
 def import_ticklist():
 
-    #--------------
-    #Will eventually want to assert that user is an admin to access the page
-    #--------------
-
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database = url.path[1:],
                             user = url.username,
                             password = url.password,
@@ -552,22 +548,22 @@ def import_ticklist():
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
-    current_user = thwart(session['user'])
+    current_user = session['user']
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
 
     if request.method == "POST":
-        if len(request.form['inputClimbs']) > 0:
-            url = request.form['inputClimbs']
-        elif len(request.form['inputTicklist']) > 0:
+        # if len(request.form['inputClimbs']) > 0:
+        #     url = request.form['inputClimbs']
+        if len(request.form['inputTicklist']) > 0:
             url = request.form['inputTicklist']
 
         html = BeautifulSoup(simple_get(url), 'html5lib')
         
-        if len(request.form['inputClimbs']) > 0:
-            climb_rows = html.findAll("tr", {"class": "Height20"})
-        elif len(request.form['inputTicklist']) > 0:
+        # if len(request.form['inputClimbs']) > 0:
+        #     climb_rows = html.findAll("tr", {"class": "Height20"})
+        if len(request.form['inputTicklist']) > 0:
             climb_rows = html.findAll('tr')
 
         areas = []
@@ -577,6 +573,7 @@ def import_ticklist():
         grades = []
         grade_count = 0
         for row in climb_rows:
+            print(row)
             if len(request.form['inputTicklist']) > 0:
                 if len(row) != 19:
                     if 'AscentPyramid' in str(row):
@@ -654,22 +651,22 @@ def import_ticklist():
                                                                                                                                         crag_name = crag))
 
 
-                                        print '{a} - {b} added!'.format(a = sector,
-                                                                        b = crag)
+                                        print('{a} - {b} added!'.format(a = sector,
+                                                                        b = crag))
                                     elif crag_only != None:
                                         cur.execute("INSERT INTO sectors (crag_name) VALUES ('{crag_name}');".format(crag_name = crag_only))
 
-                                        print '{a} added!'.format(a = crag)
+                                        print('{a} added!'.format(a = crag))
 
                                     else:
-                                        print 'Abort 1'
+                                        print('Abort 1')
                                         sys.exit()
 
                                 except psycopg2.DatabaseError as error:
                                     if 'already exists' in str(error):
-                                        print '{} already exists in db'.format(crag)
+                                        print('{} already exists in db'.format(crag))
                                     else:
-                                        print error
+                                        print(error)
 
                                 #Add the climb, then the ascent
                                 if sector != None:
@@ -691,7 +688,7 @@ def import_ticklist():
                                 cur.execute("SELECT id FROM climbs WHERE name = '{name}' and sector_id = {sid};".format(name = climb_name.replace("'", '&apos&'),
                                                                                                                         sid = int(sector_id)))
                                 climb_id = cur.fetchall()[0][0]
-                                print "{} added!".format(climb_name)
+                                print("{} added!".format(climb_name))
 
                                 try:    
                                     #Insert tick
@@ -703,13 +700,13 @@ def import_ticklist():
                                                                                                                                                                                                                                                                 suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
                                                                                                                                                                                                                                                                 stars = len(stars)))
 
-                                    print "Ascent of {} added!".format(climb_name)
+                                    print("Ascent of {} added!".format(climb_name))
 
                                 except psycopg2.DatabaseError as error:
                                     if 'already exists' in str(error):
-                                        print '"{}" already exists in db'.format(climb_name)
+                                        print('"{}" already exists in db'.format(climb_name))
                                     else:
-                                        print error
+                                        print(error)
 
 
                             #----------------------------------------------------------------------
@@ -746,23 +743,23 @@ def import_ticklist():
                                                                                                                                                                                                                                                                 suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
                                                                                                                                                                                                                                                                 stars = len(stars)))
 
-                                    print "Ascent of {} added!".format(climb_name)
+                                    print("Ascent of {} added!".format(climb_name))
 
 
                                 except psycopg2.DatabaseError as error:
                                     if 'already exists' in str(error):
-                                        print '"{}" already exists in db'.format(climb_name)
+                                        print('"{}" already exists in db'.format(climb_name))
                                     else:
-                                        print error
+                                        print(error)
 
 
                         x += 1
-                    print ''
+                    print('')
 
 
 
         for area in areas:
-            print area
+            print(area)
             cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(area))
             sector_id = cur.fetchall()[0][0]
             for row in climb_rows:
@@ -791,7 +788,7 @@ def import_ticklist():
                         #     else:
                         #         print error
 
-            print ''
+            print('')
 
         return render_template("import_ticklist.html", success = 'Ticklist imported!', 
                                                         username = current_user,
@@ -805,7 +802,7 @@ def import_ticklist():
 @login_required
 def climb_page(climb_id):
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
                             user=url.username,
                             password=url.password,
@@ -816,7 +813,7 @@ def climb_page(climb_id):
 
     # conn.cur will return a cur object, you can use this cur to perform queries
     cur = conn.cursor()
-    current_user = thwart(session['user'])
+    current_user = session['user']
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -859,7 +856,7 @@ def climb_page(climb_id):
 @login_required
 def update_info():
     # get a connection, if a connect cannot be made an exception will be raised here
-    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    url = urlparse(os.environ['DATABASE_URL'])
     conn = psycopg2.connect(database=url.path[1:],
                             user=url.username,
                             password=url.password,
@@ -869,7 +866,7 @@ def update_info():
     conn.autocommit = True
     cur = conn.cursor()
 
-    current_user = thwart(session['user'])
+    current_user = session['user']
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
 
@@ -891,13 +888,13 @@ def update_info():
         #Check for user information update:
         if 'inputFirstName' in request.form:
             try:
-                cur.execute("UPDATE users SET firstname = '{firstname}', lastname = '{lastname}', email = '{email}', dob = '{dob}', height = {height}, weight = {weight}  WHERE id = '{Id}';".format(firstname = thwart(request.form['inputFirstName']),
-                                                                                                                                                                                                    lastname = thwart(request.form['inputLastName']),
-                                                                                                                                                                                                    email = thwart(request.form['inputEmail']),
-                                                                                                                                                                                                    dob = thwart(request.form['inputDOB']),
-                                                                                                                                                                                                    height = height,
-                                                                                                                                                                                                    weight = weight,
-                                                                                                                                                                                                    Id = user_id))
+                cur.execute("UPDATE users SET firstname = '%s', lastname = '%s', email = '%s', dob = '%s', height = %i, weight = %i  WHERE id = %i;".format(request.form['inputFirstName'],
+                                                                                                                                                            request.form['inputLastName'],
+                                                                                                                                                            request.form['inputEmail'],
+                                                                                                                                                            request.form['inputDOB'],
+                                                                                                                                                            height,
+                                                                                                                                                            weight,
+                                                                                                                                                            user_id))
 
                 cur.execute("SELECT firstname, lastname, dob, height, weight, email FROM users WHERE id = {};".format(user_id))
                 info = cur.fetchall()[0]
@@ -937,8 +934,8 @@ def update_info():
             if request.form['inputPassword1'] == request.form['inputPassword2']:
                 new_password = sha256_crypt.encrypt(str(request.form['inputPassword1']))
                 try: 
-                    cur.execute("UPDATE users SET password = '{password}' WHERE id = '{Id}';".format(password = thwart(new_password),
-                                                                                                    Id = user_id))
+                    cur.execute("UPDATE users SET password = '%s' WHERE id = '{Id}';".format(new_password,
+                                                                                            user_id))
 
                     return render_template("update_info.html", username = current_user,
                                                                  fname = firstname,
