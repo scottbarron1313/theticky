@@ -201,8 +201,7 @@ def login():
                     login_cur.close()
                     login_conn.close()
                     gc.collect()
-                    return redirect(url_for('ticklist', user = '{a}_{b}'.format(a = session['user'], 
-                                                                                b = response[0][0])))
+                    return redirect(url_for('ticklist', user = '{a}'.format(a = session['user'])))
 
                 else:
                     error = 'Incorrect Username/Password'
@@ -293,12 +292,12 @@ def ticklist(user):
 
     conn.autocommit = True
 
+    # conn.cur will return a cur object, you can use this cur to perform queries
+    cur = conn.cursor()
+
     current_user = session['user']
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
-
-    # conn.cur will return a cur object, you can use this cur to perform queries
-    cur = conn.cursor()
 
     #------------------------------------------
     #User info
