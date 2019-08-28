@@ -33,13 +33,13 @@
 		<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
 			<ul class="navbar-nav">
 				<li class="nav-item active">
-					<a class="nav-link" href="#">The Ticky</a>
+					<a class="nav-link" href="/">The Ticky</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="#">Ticklist</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#">Search</a>
+					<a class="nav-link" href="/search">Search</a>
 				</li>
 				<li class="nav-item dropdown">
 			      <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
@@ -66,10 +66,10 @@
 		<br>
 		<!-- User info table -->
 		<div class= "container">
-			<div class = "col-sm-4">
+			<div class = "col-sm-6">
 				<table class= "table table-bordered table-striped dataTable table-hover table-condensed" >
 					<thead class= "thead-dark">
-						<th> {{ username }} Info </th>
+						<th> User Info </th>
 						<th></th>
 					</thead>
 					<tbody>
@@ -106,7 +106,7 @@
 
 		<!-- Ticklist -->
 		<div class= "container">
-			<div class= "panel-body">
+			<div class= "panel-body col-sm-12">
 	            <table class= "table table-bordered table-striped dataTable table-hover table-condensed" id="ticky_table">
 	                {{ main_page }}
 	          	</table>

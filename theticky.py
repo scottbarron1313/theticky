@@ -27,6 +27,7 @@ from email.mime.text import MIMEText
 import json
 import time
 import re
+from scipy.spatial import ConvexHull
 
 
 # ------------------------------------------------------
@@ -130,6 +131,21 @@ def font_to_v_boulder(font_grade):
 
     v_grade = font_v_boulder_conversion[font_grade.lower()]
     return v_grade
+
+def crag_autocomplete_list(cur):
+    #Create autocomplete list
+    cur.execute("SELECT name, crag_name FROM sectors ORDER BY crag_name;")
+    areas = cur.fetchall()
+    cs_list = []
+    for area in areas:
+        if area[0] == None:
+            sector = 'None'
+        else:
+            sector = area[0].title()
+        crag = area[1].title()
+        cs_list.append({"name" : "{a}/{b}".format(a = crag,
+                                                    b = sector)})
+    return cs_list
 
 
 
@@ -385,17 +401,7 @@ def add_boulder_ascent():
     user_id = cur.fetchall()[0][0]
 
     #Create autocomplete list
-    cur.execute("SELECT name, crag_name FROM sectors ORDER BY crag_name;")
-    areas = cur.fetchall()
-    cs_list = []
-    for area in areas:
-        if area[0] == None:
-            sector = 'None'
-        else:
-            sector = area[0].title()
-        crag = area[1].title()
-        cs_list.append({"name" : "{a}/{b}".format(a = crag,
-                                                    b = sector)})
+    cs_list = crag_autocomplete_list(cur)
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -441,17 +447,7 @@ def add_sport_ascent():
     user_id = cur.fetchall()[0][0]
 
     #Create autocomplete list
-    cur.execute("SELECT name, crag_name FROM sectors ORDER BY crag_name;")
-    areas = cur.fetchall()
-    cs_list = []
-    for area in areas:
-        if area[0] == None:
-            sector = 'None'
-        else:
-            sector = area[0].title()
-        crag = area[1].title()
-        cs_list.append({"name" : "{a}/{b}".format(a = crag,
-                                                    b = sector)})
+    cs_list = crag_autocomplete_list(cur)
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -497,17 +493,7 @@ def add_trad_ascent():
     user_id = cur.fetchall()[0][0]
 
     #Create autocomplete list
-    cur.execute("SELECT name, crag_name FROM sectors ORDER BY crag_name;")
-    areas = cur.fetchall()
-    cs_list = []
-    for area in areas:
-        if area[0] == None:
-            sector = 'None'
-        else:
-            sector = area[0].title()
-        crag = area[1].title()
-        cs_list.append({"name" : "{a}/{b}".format(a = crag,
-                                                    b = sector)})
+    cs_list = crag_autocomplete_list(cur)
 
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
@@ -776,16 +762,16 @@ def import_ticklist():
                         except:
                             continue
 
-                        # try:
-                        #     cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
-                        #                                                                                                                 sid = sector_id,
-                        #                                                                                                                 ctype = 'boulder'))
-                        #     print "{} added!".format(climb_name)
-                        # except psycopg2.DatabaseError as error:
-                        #     if 'already exists' in str(error):
-                        #         print '"{}" already exists in db'.format(climb_name)
-                        #     else:
-                        #         print error
+                        try:
+                            cur.execute("INSERT INTO climbs (name, sector_id, climb_type) VALUES ('{name}', {sid}, '{ctype}');".format(name = climb_name,
+                                                                                                                                        sid = sector_id,
+                                                                                                                                        ctype = 'boulder'))
+                            print("{} added!".format(climb_name))
+                        except psycopg2.DatabaseError as error:
+                            if 'already exists' in str(error):
+                                print('"{}" already exists in db'.format(climb_name))
+                            else:
+                                print(error)
 
             print('')
 
@@ -817,7 +803,7 @@ def climb_page(climb_id):
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
 
-    cur.execute("SELECT users.username, ticks.suggested_grade, ticks.log_date, climbs.avg_grade, sectors.name, sectors.crag_name FROM ticks INNER JOIN users ON ticks.user_id = users.id INNER JOIN climbs ON ticks.climb_id = climbs.id INNER JOIN sectors ON climbs.crag = sectors.id WHERE climbs.id = {};".format(climb_id))
+    cur.execute("SELECT users.username, ticks.suggested_grade, ticks.log_date, climbs.avg_grade, sectors.name, sectors.crag_name, climbs.latitude, climbs.longitude, climbs.name as climb_name, ticks.comment, ticks.stars FROM ticks INNER JOIN users ON ticks.user_id = users.id INNER JOIN climbs ON ticks.climb_id = climbs.id INNER JOIN sectors ON climbs.sector_id = sectors.id WHERE climbs.id = {};".format(climb_id))
 
     #------------------------------------------
     #Ticklist table creation
@@ -825,29 +811,65 @@ def climb_page(climb_id):
     
     table= '<thead class= "thead-dark"><tr>'
     for header in ticklist_columns:
-        table += '<th>{header}</th>'.format(header= header.replace('_',' ').title())
+        if header == 'name':
+            header = 'Sector'
+        elif header == 'crag_name':
+            header = 'Crag'
+
+        #Don't need to put the climb name and the avg grade in the table, they can be go at the top of the page
+        if header in ['username', 'suggested_grade', 'log_date', 'comment', 'stars']:
+            table += '<th>{header}</th>'.format(header = header.replace('_',' ').title())
 
     table += '</tr></thead><tbody>'
 
     ticks = cur.fetchall()
 
     for row in ticks:
+        table += '<tr>'
         for num, item in enumerate(row):
-            if num in [ticklist_columns.index('suggested_grade'), ticklist_columns.index('avg_grade')]:
-                table += '<td>V{a}</td>'.format(a = item)
-            elif num == ticklist_columns.index('log_date'):
-                table += '<td>{a}</td>'.format(a = item)
-            elif num == ticklist_columns.index('username'):
-                table += '<td>{a}</td>'.format(a = item)
-            else:
-                table += '<td>{a}</td>'.format(a = item.title())
 
-    table += '</tr></body>'
+            if num in [ticklist_columns.index('username'), 
+                        ticklist_columns.index('suggested_grade'), 
+                        ticklist_columns.index('log_date'), 
+                        ticklist_columns.index('comment'),
+                        ticklist_columns.index('stars')]:
+
+
+                if num == ticklist_columns.index('suggested_grade'):
+                    table += '<td>V{a}</td>'.format(a = item)
+                elif num in [ticklist_columns.index('log_date'), 
+                                ticklist_columns.index('username'),
+                                ticklist_columns.index('stars')]:
+                    table += '<td>{a}</td>'.format(a = item)
+                else:
+                    table += '<td>{a}</td>'.format(a = item.title())
+
+            else:
+                if num == ticklist_columns.index('latitude'):
+                    lat = item
+                elif num == ticklist_columns.index('longitude'):
+                    lon = item
+                elif num == ticklist_columns.index('climb_name'):
+                    climb_name = item
+                elif num == ticklist_columns.index('avg_grade'):
+                    avg_grade = item
+                elif num == ticklist_columns.index('name'):
+                    sector = item
+                elif num == ticklist_columns.index('crag_name'):
+                    crag = item
+        table += '</tr>'
+    table += '</body>'
 
 
     return render_template("climb_page.html", main_page = Markup(table), 
                                                 username = current_user,
-                                                user_url = '/update_info')
+                                                user_url = '/update_info',
+                                                latitude = lat,
+                                                longitude = lon,
+                                                sector = sector.replace('&apos&',"'").title(),
+                                                crag = crag.replace('&apos&',"'").title(),
+                                                climb_name = climb_name.replace('&apos&',"'").title(),
+                                                avg_grade = avg_grade)
 
 
 #Need a page to update user info
@@ -980,20 +1002,111 @@ def update_info():
 
 
 
+#Search page
+@app.route("/search", methods = ["GET", "POST"])
+@login_required
+def search():
+    # get a connection, if a connect cannot be made an exception will be raised here
+    url = urlparse(os.environ['DATABASE_URL'])
+    conn = psycopg2.connect(database = url.path[1:],
+                            user = url.username,
+                            password = url.password,
+                            host = url.hostname,
+                            port = url.port)
+
+    conn.autocommit = True
+
+    # conn.cur will return a cur object, you can use this cur to perform queries
+    cur = conn.cursor()
+    current_user = session['user']
+
+    cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
+    user_id = cur.fetchall()[0][0]
+
+    #Generate autocomplete list
+    cs_list = crag_autocomplete_list(cur)
+
+    #Get geometries of sectors to display on map
+    cur.execute("SELECT id, name, ST_AsText(geom) FROM Sectors WHERE geom IS NOT NULL;")
+    sectors = cur.fetchall()
+
+    #List that will contain the geometry html that we're adding to the search map
+    sector_geoms = []
+
+    for sector in sectors:
+        sid = sector[0]
+        sector_name = sector[1].title()
+        geom = sector[2].replace('POLYGON((','').replace('))','')
+
+        coords = []
+
+        for coord_set in geom.split(','):
+            coords.append([float(coord_set.split(' ')[0]), float(coord_set.split(' ')[1])])
+
+        print(sid, sector_name, geom)
+
+        sector_geoms.append('var polygon_{sid} = L.polygon({geom}).bindPopup("{sector_name}").addTo(main_map);'.format(sid = sid,
+                                                                                                                geom = coords,
+                                                                                                                sector_name = sector_name))
+
+    print(''.join(sector_geoms)[1:-1].replace("'",''))
+
+    return render_template("search_page.html", cs_list = Markup(cs_list),
+                                                latitude = 40.740708, 
+                                                longitude = -105.318972,
+                                                sector_coords = Markup(''.join(sector_geoms).replace("'",'')))
 
 
 
 
+@app.route("/admin", methods = ["GET", "POST"])
+@login_required
+def admin_page():
 
+    # get a connection, if a connect cannot be made an exception will be raised here
+    url = urlparse(os.environ['DATABASE_URL'])
+    conn = psycopg2.connect(database = url.path[1:],
+                            user = url.username,
+                            password = url.password,
+                            host = url.hostname,
+                            port = url.port)
 
+    conn.autocommit = True
 
+    # conn.cur will return a cur object, you can use this cur to perform queries
+    cur = conn.cursor()
+    current_user = session['user']
 
+    if current_user != 'sbarron':
+        return redirect(url_for('ticklist', user = '{a}'.format(a = session['user'])))
 
+    else:
+        #Update sector lat/long
+        cur.execute("SELECT id FROM sectors;")
+        sector_ids = cur.fetchall()
 
+        for sid in sector_ids:
+            cur.execute("SELECT * FROM climbs WHERE sector_id = {} AND latitude IS NOT NULL;".format(sid[0]))
+            climbs = cur.fetchall()
 
+            if len(climbs) > 2:
+                #Create convex hull geometry for sector
+                sector_points = []
+                for climb in climbs:
+                    climb_lat = climb[2]
+                    climb_long = climb[3]
+                    sector_points.append([climb_lat, climb_long])
 
+                hull = ConvexHull(sector_points)
 
+                perimiter = [sector_points[i] for i in hull.vertices]
+                perimiter.append(perimiter[0])
 
+                cur.execute("UPDATE Sectors SET geom = '{geom}' WHERE id = {sid}".format(geom = 'Polygon({})'.format(str(perimiter).replace('], [',',').replace(', ',' ').replace('[[','(').replace(']]',')')),
+                                                                                            sid = sid[0]))
+                    
+
+    return render_template('error.html')
 
 
 

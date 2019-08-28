@@ -33,13 +33,13 @@
 		<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
 			<ul class="navbar-nav">
 				<li class="nav-item active">
-					<a class="nav-link" href="#">The Ticky</a>
+					<a class="nav-link" href="/">The Ticky</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="#">Ticklist</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#">Search</a>
+					<a class="nav-link" href="/search">Search</a>
 				</li>
 				<li class="nav-item dropdown">
 			      <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
@@ -131,6 +131,14 @@
 						<div class="form-group col-md-5">
 							<label for="inputCrag">Crag</label>
 							<input type="text" class="form-control" id="inputCrag">
+						</div>
+						<div class="form-group col-md-3">
+							<label for="inputLat">Latitude</label>
+							<input type="number" name="inputLat" id="inputLat" class="form-control" placeholder="37.715351" required>
+						</div>
+						<div class="form-group col-md-3">
+							<label for="inputLong">Longitude</label>
+							<input type="number" name="inputLong" id="inputLong" class="form-control" placeholder="-119.677694" required>
 						</div>
 						<div class="form-group col-md-2">
 							<label for="inputStars">Stars</label>

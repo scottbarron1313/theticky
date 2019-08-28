@@ -46,13 +46,13 @@
 		<nav class="navbar navbar-expand-sm bg-dark navbar-dark">
 			<ul class="navbar-nav">
 				<li class="nav-item active">
-					<a class="nav-link" href="#">The Ticky</a>
+					<a class="nav-link" href="/">The Ticky</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="#">Ticklist</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link" href="#">Search</a>
+					<a class="nav-link" href="/search">Search</a>
 				</li>
 				<li class="nav-item dropdown">
 			      <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
@@ -132,12 +132,12 @@
 							<input type="text" name="inputCS" id="inputCS" class="form-control" required>
 						</div>
 						<div class="form-group col-md-3">
-							<label for="inputLat">37.715351</label>
-							<input type="number" name="inputLat" id="inputLat" class="form-control" required>
+							<label for="inputLat">Latitude</label>
+							<input type="number" name="inputLat" id="inputLat" class="form-control" placeholder="37.715351" required>
 						</div>
 						<div class="form-group col-md-3">
-							<label for="inputLong">-119.677694</label>
-							<input type="number" name="inputLong" id="inputLong" class="form-control" required>
+							<label for="inputLong">Longitude</label>
+							<input type="number" name="inputLong" id="inputLong" class="form-control" placeholder="-119.677694" required>
 						</div>
 					</div>
 					<div class="form-group">
@@ -167,7 +167,7 @@
 	        	source: {{ cs_list }}
 			});
 
-    		</script>
+		</script>
     </body>
 </html>
 
