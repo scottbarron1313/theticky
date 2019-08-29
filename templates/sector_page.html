@@ -67,8 +67,20 @@
 			</ul>
 		</nav>
 		<br>
-		<!-- Search for crag or sector by name (includes autocomplete) -->
+		<!-- Show map with all climbs in the sector -->
 		<div class= "container">
+			<div class="card text-center">
+				<div class="card-header">
+				{{ crag_name }}
+				</div>
+				<div class="card-body">
+					<div class="folium-map form-group" id="main_map" style="width: 800px; height: 550px; position: relative;" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
+				</div>
+			</div>
+		</div>
+
+		<!-- Search for crag or sector by name (includes autocomplete) -->
+<!-- 		<div class= "container">
 			<div class="card text-center">
 				<div class="card-header">
 				Search for Crag/Sector By Name
@@ -92,7 +104,7 @@
 					<div class="folium-map form-group" id="main_map" style="width: 800px; height: 550px; position: relative;" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
 				</div>
 			</div>
-		</div>
+		</div> -->
 
 		<br>
 
@@ -145,14 +157,14 @@
 			var main_map = L.map(
 								  'main_map',
 								  {center: [lat, lon],
-								  zoom: 5,
+								  zoom: 14,
 								  maxBounds: bounds,
 								  layers: [streets_tile_layer],
 								  worldCopyJump: false,
 								  crs: L.CRS.EPSG3857
 								 });
 
-			{{ sector_coords }}
+			{{ climb_coords }}
 
 			// Add imagery to map
 			var baseMaps = {"Imagery": imagery_tile_layer,
