@@ -1131,6 +1131,7 @@ def sector_page(sector_id):
     climbs = cur.fetchall()
 
     coord_dict = {}
+    climb_table = '<thead class= "thead-dark"><tr><th>Climb</th><th>Average Grade</th><th>Coordinates</th></tr></thead><tbody>'
 
     for climb in climbs:
         climb_id = climb[0]
@@ -1152,14 +1153,31 @@ def sector_page(sector_id):
                     coord_dict['{lat},{lon}'.format(lat = latitude, lon = longitude)].append("<a href='/climb/{climb_id}'>{climb_name}: V{avg_grade}</a>".format(climb_id = climb_id,
                                                                                                                                                                 climb_name = climb_name,
                                                                                                                                                                 avg_grade = avg_grade))
+        climb_table += '<tr><td><a href="/climb/{climb_id}">{climb_name}</a></td><td>V{avg_grade}</td><td>{lat}, {long}</td></tr>'.format(climb_id = climb_id,
+                                                                                                                                            climb_name = climb_name,
+                                                                                                                                            avg_grade = avg_grade,
+                                                                                                                                            lat = latitude,
+                                                                                                                                            long = longitude)    
+    #     table= '<thead class= "thead-dark"><tr>'
+    # for header in ticklist_columns:
+    #     if header != 'cid':
+    #         table += '<th>{header}</th>'.format(header= header.replace('_',' ').title())
+
+    # table += '</tr></thead><tbody>'
+
+    # for row in ticks:
+    #     table += '<tr>'
+    #     for num, item in enumerate(row):
+    #         if item == None:
+    #             item = 'n/a'
+
+    #         if num == ticklist_columns.index('suggested_grade'):
+    #             table += '<td>V{a}</td>'.format(a = item)
+
+
+    climb_table += '</tbody>'
+
     markers = []
-
-    # '''var marker_{climb_id} = L.marker([{latitude}, {longitude}]).bindPopup("<a href='/climb/{climb_id}'>{climb_name}: V{avg_grade}</a>").addTo(main_map);'''.format(climb_id = climb_id,
-    #                                                                                                                                                                                                                                                         latitude = latitude,
-    #                                                                                                                                                                                                                                                         longitude = longitude,
-    #                                                                                                                                                                                                                                                         climb_name = climb_name,
-    #                                                                                                                                                                                                                                                         avg_grade = avg_grade)
-
     for key, value in coord_dict.items():
         markers.append('''var marker = L.marker([{latitude}, {longitude}]).bindPopup("{insert}").addTo(main_map);'''.format(latitude = key.split(',')[0], 
                                                                                                                             longitude = key.split(',')[1],
@@ -1167,7 +1185,8 @@ def sector_page(sector_id):
 
     return render_template('sector_page.html', climb_coords = Markup(''.join(markers)),
                                                 latitude = key.split(',')[0],
-                                                longitude = key.split(',')[1])
+                                                longitude = key.split(',')[1],
+                                                climb_info = Markup(climb_table))
 
 
 

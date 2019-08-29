@@ -108,6 +108,14 @@
 
 		<br>
 
+		<div class="container">
+			<div class="col-md-12">
+				<table class="table table-bordered table-striped dataTable table-hover table-condensed">
+					{{ climb_info }}
+				</table>
+			</div>
+		</div>
+
 		<script type='text/javascript'>
 			var southWest = L.latLng(-90, -180);
 			var northEast = L.latLng(90, 180);
@@ -147,8 +155,6 @@
 			// var greenMarker = L.AwesomeMarkers.icon({
 			// 										markerColor: 'green'
 			// 									  });
-
-			{{ climb_info }}
 
 			var lat = {{ latitude }}
 			var lon = {{ longitude }}
