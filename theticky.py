@@ -185,20 +185,17 @@ def login():
     #export DATABASE_URL=postgres://opimlbnkhudqpv:e2c778406ab743a2bcdef8ce2c07544ba66dc50a75c241e4929215b1b2198f83@ec2-107-21-108-204.compute-1.amazonaws.com:5432/df9g9j9vm0bu32
     url = urlparse(os.environ['DATABASE_URL'])
 
-    error = None
-    success = None
-
     if request.method == 'POST':
         session.pop('user', None)
 
         #Connect to database on heroku
-        login_conn= psycopg2.connect(database=url.path[1:],
+        login_conn = psycopg2.connect(database=url.path[1:],
                                     user=url.username,
                                     password=url.password,
                                     host=url.hostname,
                                     port=url.port)
 
-        login_conn.autocommit= True
+        login_conn.autocommit = True
         login_cur = login_conn.cursor()
 
         #Main login fucntion here
@@ -227,9 +224,9 @@ def login():
             new_username = request.form['new_username']
             if ' ' in new_username:
                 error = 'Please enter a username without spaces'
-                return render_template('login_new.html', error = error)
+                return render_template('login_new.html', new_account_error = error)
 
-            new_password = sha256_crypt.encrypt(str(request.form['new_password']))
+            new_password = sha256_crypt.hash(str(request.form['new_password']))
             new_email = request.form['new_email']
 
             #Create new account
@@ -239,19 +236,20 @@ def login():
             existing_email = login_cur.fetchall()
 
             if len(existing_username)!= 0 or len(existing_email)!= 0:
-                error = 'Account already exists!'
-                return render_template('login_new.html', error = error)
+                error = 'Username and/or Email Already Exist!'
+                return render_template('login_new.html', new_account_error = error)
 
-            login_cur.execute("INSERT INTO users (username, password, email, firstname, lastname, dob, height, weight) VALUES (%s, %s, %s, %s, %s, %s, %i, %i);", (new_username, 
+            login_cur.execute("INSERT INTO users (username, password, email, firstname, lastname, dob, height, weight) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);", (new_username, 
                                                                                                                                                                     new_password, 
                                                                                                                                                                     new_email, 
                                                                                                                                                                     request.form['new_firstname'], 
                                                                                                                                                                     request.form['new_lastname'], 
                                                                                                                                                                     request.form['new_dob'], 
-                                                                                                                                                                    request.form['new_height'], 
-                                                                                                                                                                    request.form['new_weight']))
+                                                                                                                                                                    int(request.form['new_height']), 
+                                                                                                                                                                    int(request.form['new_weight'])))
+
             new_success = 'Account Created!'
-            return render_template('login_new.html', new_success = new_success)
+            return render_template('login_new.html', new_account_success = new_success)
 
         #Forgot login section
         #Still needs work
@@ -271,7 +269,7 @@ def login():
             print('OTHER')
             print(request.form)
 
-    return render_template('login_new.html', error= error, success= success)
+    return render_template('login_new.html')
 
 # Main page
 @app.route("/", methods=["GET", "POST"])
@@ -1126,6 +1124,12 @@ def sector_page(sector_id):
     cur = conn.cursor()
     current_user = session['user']
 
+    cur.execute("SELECT name FROM sectors WHERE id = {};".format(int(sector_id)))
+
+    sector_name = cur.fetchall()[0][0].title()
+
+    print(sector_name)
+
     #DO NOT remove the int() function, this should help prevent sql injection.
     cur.execute("SELECT * FROM climbs WHERE sector_id = {};".format(int(sector_id)))
     climbs = cur.fetchall()
@@ -1184,6 +1188,7 @@ def sector_page(sector_id):
                                                                                                                             insert = '<br>'.join(value)))
 
     return render_template('sector_page.html', climb_coords = Markup(''.join(markers)),
+                                                crag_name = sector_name,
                                                 latitude = key.split(',')[0],
                                                 longitude = key.split(',')[1],
                                                 climb_info = Markup(climb_table))

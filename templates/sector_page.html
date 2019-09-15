@@ -10,6 +10,9 @@
 		<!-- Bootstrap -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
 
+		<!-- Map Sizing CSS -->
+		<link = rel="stylesheet" src="/static/css/map_display.css">
+
 		<!-- Font Awesome Icons -->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -74,45 +77,17 @@
 				{{ crag_name }}
 				</div>
 				<div class="card-body">
-					<div class="folium-map form-group" id="main_map" style="width: 800px; height: 550px; position: relative;" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
+					<div class="col-md-12">
+						<div class="folium-map form-group" id="main_map" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
+						</div>
+					</div>
+					<br>
+					<div class="col-md-12">
+						<table class="table table-bordered table-striped dataTable table-hover table-condensed">
+							{{ climb_info }}
+						</table>
+					</div>
 				</div>
-			</div>
-		</div>
-
-		<!-- Search for crag or sector by name (includes autocomplete) -->
-<!-- 		<div class= "container">
-			<div class="card text-center">
-				<div class="card-header">
-				Search for Crag/Sector By Name
-				</div>
-				<div class="card-body">
-					<form>
-						<input type="text" name="inputCS" id="inputCS" class="form-control" required>
-						<br>
-						<button type="submit" class="btn btn-primary" formmethod="post">Search</button>
-					</form>
-				</div>
-			</div>
-		</div>
-		<br>
-		<div class= "container">
-			<div class="card text-center">
-				<div class="card-header">
-				Search via Location
-				</div>
-				<div class="card-body">
-					<div class="folium-map form-group" id="main_map" style="width: 800px; height: 550px; position: relative;" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
-				</div>
-			</div>
-		</div> -->
-
-		<br>
-
-		<div class="container">
-			<div class="col-md-12">
-				<table class="table table-bordered table-striped dataTable table-hover table-condensed">
-					{{ climb_info }}
-				</table>
 			</div>
 		</div>
 

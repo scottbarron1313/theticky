@@ -90,12 +90,12 @@
                     </form>
                 </div>
                 <br>
-                {% if new_error %}
+                {% if login_error %}
                     <div class= "alert alert-danger">
                         <p class="error"><strong>Error:</strong> {{ login_error }}
                     </div>
                 {% endif %}
-                {% if new_success %}
+                {% if login_success %}
                     <div class= "alert alert-success">
                         <p class="success"> {{ login_success }}
                     </div>
@@ -158,14 +158,14 @@
                     </form>
                 </div>
                 <br>
-                {% if new_error %}
+                {% if new_account_error %}
                     <div class= "alert alert-danger">
-                        <p class="error"><strong>Error:</strong> {{ info_error }}
+                        <p class="error"><strong>Error:</strong> {{ new_account_error }}
                     </div>
                 {% endif %}
-                {% if new_success %}
+                {% if new_account_success %}
                     <div class= "alert alert-success">
-                        <p class="success"> {{ info_success }}
+                        <p class="success"> {{ new_account_success }}
                     </div>
                 {% endif %}
             </div>
