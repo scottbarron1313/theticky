@@ -409,6 +409,89 @@ def add_boulder_ascent():
 
     #Doesn't actuall add a climb yet
     if request.method == "POST":
+
+        climb_name = request.form['inputClimbName']
+        send_date = request.form['inputDate']
+        grade = request.form['inputGrade']
+        stars = request.form['inputStars']
+        crag = request.form['inputCS'].split('/')[0]
+        sector = request.form['inputCS'].split('/')[1]
+        lat = float(request.form['inputLat'])
+        lon = float(request.form['inputLong'])
+        comment = request.form['inputComment']
+
+
+        #------------------------------------------------------------------------
+        #Sector/Crag Work
+        #First check if the crag exists
+        cur.execute("SELECT id, name FROM sectors WHERE crag_name = %s;", (crag.lower(),))
+        crag_results = cur.fetchall()
+
+        if len(crag_results) == 0:
+            #New Crag
+            cur.execute("INSERT INTO sectors (name, crag_name, latitude, longitude) VALUES ('{sector}', '{crag}') RETURNING id;".format(sector = sector,
+                                                                                                                    crag = crag))
+
+            sector_id = cur.fetchall()[0][0]
+
+        else:
+            #Already exsting crag
+            sector_exists = False
+            for sec in crag_results:
+                sid = sec[0]
+                sname = sec[1]
+
+                #Determine if the sector already exists
+                if sname == sector.lower():
+                    sector_exists = True
+                    sector_id = sid
+
+            #New sector needs to be added
+            if sector_exists == False:
+                cur.execute("INSERT INTO sectors (name, crag_name) VALUES (%s, %s) RETURNING id;", (sector.lower(), crag.lower(),))
+
+                sector_id = cur.fetchall()[0][0]
+
+        #------------------------------------------------------------------------
+        #Climb work
+        #Determine if climb already exists
+        cur.execute("SELECT id FROM climbs WHERE sector_id = %s AND name = %s;", (sector_id, climb_name.lower(),))
+
+        climbs = cur.fetchall()
+
+        #If it's a new climb (also check to make sure the climb name isn't entered twice? Shouldn't happen though.)
+        if len(climbs) == 0:
+            cur.execute("INSERT INTO climbs (name, sector_id, latitude, longitude, climb_type) VALUES (%s, %s, %s, %s, 'boulder') RETURNING id;", (climb_name.lower(), 
+                                                                                                                                                    sector_id,
+                                                                                                                                                    lat,
+                                                                                                                                                    lon,))
+            climb_id = cur.fetchall()[0][0]
+
+        elif len(climbs) == 1:
+            climb_id = climbs[0][0]
+        #------------------------------------------------------------------------
+        #Tick work
+        #Make sure the ascent hasn't already been recorded by this user
+
+        cur.execute("SELECT * FROM ticks WHERE user_id = {uid} AND climb_id = {cid};".format(uid = user_id,
+                                                                                                cid = climb_id))
+        tick_results = cur.fetchall()
+
+        if len(tick_results) > 0:
+            return render_template("add_boulder_ascent.html", error = "Climb already added to your ticklist!", 
+                                                            cs_list = Markup(cs_list), 
+                                                            username = current_user, 
+                                                            user_url = '/update_info')
+
+        else:
+            cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES (%s, %s, %s, %s, 'send', %s, %s);", (user_id,
+                                                                                                                                                                climb_id,
+                                                                                                                                                                comment, 
+                                                                                                                                                                send_date,
+                                                                                                                                                                grade,
+                                                                                                                                                                stars,))
+
+
         success = 'Boulder added!'
         return render_template("add_boulder_ascent.html", success = success, 
                                                             cs_list = Markup(cs_list), 
@@ -501,7 +584,6 @@ def add_trad_ascent():
 
     if request.method == "POST":
         success = 'Trad route added!'
-        print(request.form)
         return render_template("add_trad_ascent.html", success = success, 
                                                         cs_list = Markup(cs_list), 
                                                         username = current_user,
@@ -556,7 +638,6 @@ def import_ticklist():
         grades = []
         grade_count = 0
         for row in climb_rows:
-            print(row)
             if len(request.form['inputTicklist']) > 0:
                 if len(row) != 19:
                     if 'AscentPyramid' in str(row):
@@ -742,7 +823,6 @@ def import_ticklist():
 
 
         for area in areas:
-            print(area)
             cur.execute("SELECT id FROM sectors WHERE name = '{}';".format(area))
             sector_id = cur.fetchall()[0][0]
             for row in climb_rows:
@@ -770,8 +850,6 @@ def import_ticklist():
                                 print('"{}" already exists in db'.format(climb_name))
                             else:
                                 print(error)
-
-            print('')
 
         return render_template("import_ticklist.html", success = 'Ticklist imported!', 
                                                         username = current_user,
@@ -826,6 +904,8 @@ def climb_page(climb_id):
         table += '<tr>'
         for num, item in enumerate(row):
 
+            print(row)
+
             if num in [ticklist_columns.index('username'), 
                         ticklist_columns.index('suggested_grade'), 
                         ticklist_columns.index('log_date'), 
@@ -858,6 +938,9 @@ def climb_page(climb_id):
         table += '</tr>'
     table += '</body>'
 
+    if all(i in globals() for i in ['lat', 'lon']) == False:
+        lat = 0.00
+        lon = 0.00
 
     return render_template("climb_page.html", main_page = Markup(table), 
                                                 username = current_user,
@@ -1041,7 +1124,6 @@ def search():
         for coord_set in geom.split(','):
             coords.append([float(coord_set.split(' ')[0]), float(coord_set.split(' ')[1])])
 
-        print(sid, sector_name, geom)
 
         sector_geoms.append('''var polygon_{sid} = L.polygon({geom}).bindPopup("<a href='/sector/{sid}'>{sector_name}</a>").addTo(main_map);'''.format(sid = sid,
                                                                                                                 geom = coords,

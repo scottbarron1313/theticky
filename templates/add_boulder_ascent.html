@@ -121,8 +121,6 @@
 								<option value="1">*</option>
 		                        <option value="2">**</option>
 		                        <option value="3">***</option>
-		                        <option value="4">****</option>
-		                        <option value="5">*****</option>
 	                       </select>
 						</div>
 					</div>
@@ -133,11 +131,11 @@
 						</div>
 						<div class="form-group col-md-3">
 							<label for="inputLat">Latitude</label>
-							<input type="number" name="inputLat" id="inputLat" class="form-control" placeholder="37.715351" required>
+							<input type="number" step="0.0000001" name="inputLat" id="inputLat" class="form-control" placeholder="37.715351">
 						</div>
 						<div class="form-group col-md-3">
 							<label for="inputLong">Longitude</label>
-							<input type="number" name="inputLong" id="inputLong" class="form-control" placeholder="-119.677694" required>
+							<input type="number" step="0.0000001" name="inputLong" id="inputLong" class="form-control" placeholder="-119.677694">
 						</div>
 					</div>
 					<div class="form-group">

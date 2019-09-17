@@ -7,15 +7,14 @@
 		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 		<title>The Ticky</title>
 
+		<!-- Map Sizing CSS -->
+		<link rel="stylesheet" type= "text/css" href="/static/css/map_display.css">
+
 		<!-- Bootstrap -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
 
-		<!-- Map Sizing CSS -->
-		<link = rel="stylesheet" src="/static/css/map_display.css">
-
 		<!-- Font Awesome Icons -->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-
 
 		<!-- jquery -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -74,11 +73,11 @@
 		<div class= "container">
 			<div class="card text-center">
 				<div class="card-header">
-				{{ crag_name }}
+				<b>{{ crag_name }}</b>
 				</div>
 				<div class="card-body">
 					<div class="col-md-12">
-						<div class="folium-map form-group" id="main_map" class="leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom">
+						<div id="main_map" class="folium-map form-group leaflet-container leaflet-touch leaflet-retina leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom mapboundary">
 						</div>
 					</div>
 					<br>
@@ -174,6 +173,8 @@
 			$("#inputCS").typeahead({
 				source: {{ cs_list }}
 			});
+
+			$(window).on("resize", function () { $("#main_map").width($(window).width()); map.invalidateSize(); }).trigger("resize");
 
 		</script>
 	</body>
