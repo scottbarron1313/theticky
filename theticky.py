@@ -661,9 +661,13 @@ def import_ticklist():
                         if x == 1:
                             if '<nobr>' in str(part):
                                 part = str(part).replace('<i>','')
-                                date = part.split('<nobr>')[1][0:8]
+
+                                #Replace removes bold characters (for new ascents on 8a)
+                                date = part.split('<nobr>')[1].replace('<b>','').replace('</b>','')[0:8]
                             else:
-                                date = str(part).split('<i>')[1][0:8]
+                                #Replace removes bold characters (for new ascents on 8a)
+                                date = str(part).split('<i>')[1].replace('<b>','').replace('</b>','')[0:8]
+
 
                             if int(date[0:2]) > 50:
                                 year = int('19{}'.format(date[0:2]))
@@ -671,6 +675,7 @@ def import_ticklist():
                                 year = int('20{}'.format(date[0:2]))
                             date = '{year}{date}'.format(year = year,
                                                          date = date[2:])
+
 
                         #Climb Name
                         elif x == 5:
@@ -762,7 +767,7 @@ def import_ticklist():
                                                                                                                                                                                                                                                                 log_date = date,
                                                                                                                                                                                                                                                                 log_type = 'send',
                                                                                                                                                                                                                                                                 suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
-                                                                                                                                                                                                                                                                stars = len(stars)))
+                                                                                                                                                                                                                                                                stars = stars))
 
                                     print("Ascent of {} added!".format(climb_name))
 
@@ -902,10 +907,8 @@ def climb_page(climb_id):
 
     for row in ticks:
         table += '<tr>'
+        print(row)
         for num, item in enumerate(row):
-
-            print(row)
-
             if num in [ticklist_columns.index('username'), 
                         ticklist_columns.index('suggested_grade'), 
                         ticklist_columns.index('log_date'), 
@@ -917,7 +920,8 @@ def climb_page(climb_id):
                     table += '<td>V{a}</td>'.format(a = item)
                 elif num in [ticklist_columns.index('log_date'), 
                                 ticklist_columns.index('username'),
-                                ticklist_columns.index('stars')]:
+                                ticklist_columns.index('stars'),
+                                ticklist_columns.index('comment')]:
                     table += '<td>{a}</td>'.format(a = item)
                 else:
                     table += '<td>{a}</td>'.format(a = item.title())
@@ -938,7 +942,7 @@ def climb_page(climb_id):
         table += '</tr>'
     table += '</body>'
 
-    if all(i in globals() for i in ['lat', 'lon']) == False:
+    if 'lat' not in vars():
         lat = 0.00
         lon = 0.00
 
@@ -1104,6 +1108,15 @@ def search():
     cur.execute("SELECT id FROM users WHERE username = '{}'".format(current_user))
     user_id = cur.fetchall()[0][0]
 
+    if request.method == 'POST':
+        crag = request.form['inputCS'].split('/')[0]
+        sector = request.form['inputCS'].split('/')[1]
+
+        cur.execute("SELECT id FROM sectors WHERE name = %s", (sector.lower(),))
+        sector_id = cur.fetchall()[0][0]
+
+        return redirect(url_for('sector_page', sector_id = sector_id))
+
     #Generate autocomplete list
     cs_list = crag_autocomplete_list(cur)
 
@@ -1128,8 +1141,6 @@ def search():
         sector_geoms.append('''var polygon_{sid} = L.polygon({geom}).bindPopup("<a href='/sector/{sid}'>{sector_name}</a>").addTo(main_map);'''.format(sid = sid,
                                                                                                                 geom = coords,
                                                                                                                 sector_name = sector_name))
-
-    print(''.join(sector_geoms)[1:-1].replace("'",''))
 
     return render_template("search_page.html", cs_list = Markup(cs_list),
                                                 latitude = 40.740708, 
@@ -1184,7 +1195,10 @@ def admin_page():
 
                 cur.execute("UPDATE Sectors SET geom = '{geom}' WHERE id = {sid}".format(geom = 'Polygon({})'.format(str(perimiter).replace('], [',',').replace(', ',' ').replace('[[','(').replace(']]',')')),
                                                                                             sid = sid[0]))
-                    
+        
+
+        #Update average grades
+        cur.execute("UPDATE climbs a SET avg_grade = b.climb_sum/b.climb_total FROM (SELECT SUM(suggested_grade) as climb_sum, count(*) as climb_total, climb_id FROM ticks GROUP BY climb_id) as b WHERE b.climb_id = a.id;")            
 
     return render_template('error.html')
 
@@ -1236,43 +1250,40 @@ def sector_page(sector_id):
                                                                                                                                                                 climb_name = climb_name,
                                                                                                                                                                 avg_grade = avg_grade)]
                 else:
-                    coord_dict['{lat},{lon}'.format(lat = latitude, lon = longitude)].append("<a href='/climb/{climb_id}'>{climb_name}: V{avg_grade}</a>".format(climb_id = climb_id,
+                    coord_dict['{lat},{lon}'.format(lat = latitude, lon = longitude)].append("<a href='/climb/{climb_id}'>{climb_name}: {avg_grade}</a>".format(climb_id = climb_id,
                                                                                                                                                                 climb_name = climb_name,
                                                                                                                                                                 avg_grade = avg_grade))
         climb_table += '<tr><td><a href="/climb/{climb_id}">{climb_name}</a></td><td>V{avg_grade}</td><td>{lat}, {long}</td></tr>'.format(climb_id = climb_id,
                                                                                                                                             climb_name = climb_name,
                                                                                                                                             avg_grade = avg_grade,
                                                                                                                                             lat = latitude,
-                                                                                                                                            long = longitude)    
-    #     table= '<thead class= "thead-dark"><tr>'
-    # for header in ticklist_columns:
-    #     if header != 'cid':
-    #         table += '<th>{header}</th>'.format(header= header.replace('_',' ').title())
-
-    # table += '</tr></thead><tbody>'
-
-    # for row in ticks:
-    #     table += '<tr>'
-    #     for num, item in enumerate(row):
-    #         if item == None:
-    #             item = 'n/a'
-
-    #         if num == ticklist_columns.index('suggested_grade'):
-    #             table += '<td>V{a}</td>'.format(a = item)
-
+                                                                                                                                            long = longitude)
 
     climb_table += '</tbody>'
 
     markers = []
+    lats = []
+    lons = []
     for key, value in coord_dict.items():
         markers.append('''var marker = L.marker([{latitude}, {longitude}]).bindPopup("{insert}").addTo(main_map);'''.format(latitude = key.split(',')[0], 
                                                                                                                             longitude = key.split(',')[1],
                                                                                                                             insert = '<br>'.join(value)))
+        lats.append(float(key.split(',')[0]))
+        lons.append(float(key.split(',')[1]))
 
+
+    if len(coord_dict) == 0:
+        lat_key = 0.0000
+        lon_key = 0.0000
+
+    else:
+        lat_key = float(sum(lats)) / len(lats)
+        lon_key = float(sum(lons)) / len(lons)
+ 
     return render_template('sector_page.html', climb_coords = Markup(''.join(markers)),
                                                 crag_name = sector_name,
-                                                latitude = key.split(',')[0],
-                                                longitude = key.split(',')[1],
+                                                latitude = lat_key,
+                                                longitude = lon_key,
                                                 climb_info = Markup(climb_table))
 
 
