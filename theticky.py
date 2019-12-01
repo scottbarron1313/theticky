@@ -25,7 +25,7 @@ from urllib.parse import urlparse
 import smtplib
 from email.mime.text import MIMEText
 import json
-import time
+import datetime
 import re
 from scipy.spatial import ConvexHull
 
@@ -127,6 +127,7 @@ def font_to_v_boulder(font_grade):
                                     '5b':1,
                                     '5a+':0,
                                     '5a':0,
+                                    '4c':0,
                                     '3a':0}
 
     v_grade = font_v_boulder_conversion[font_grade.lower()]
@@ -324,6 +325,25 @@ def ticklist(user):
     weight = info[4]
 
     #------------------------------------------
+    #Get count of climbs done in last year
+
+    current_year = datetime.datetime.now().year
+
+    cur.execute('SELECT suggested_grade, count(*) FROM ticks WHERE user_id = {user_id} AND EXTRACT(year FROM "log_date") = {date} GROUP BY suggested_grade ORDER BY suggested_grade DESC;'.format(user_id = user_id,
+                                                                                                                                                                                                    date = current_year))
+    totals = cur.fetchall()
+
+
+    total_table = '<table class= "table table-bordered table-striped dataTable table-hover table-condensed" ><thead class= "thead-dark"><tr><th>Grade</th><th>Count</th>'
+    total_table += '</tr></thead><tbody>'
+
+    for climb_total in totals:
+        total_table += '<tr><td>V{grade}</td><td>{count}</td></tr>'.format(grade = climb_total[0],
+                                                                            count = climb_total[1])
+
+    total_table += '</tbody></table>'
+
+    #------------------------------------------
     cur.execute('SELECT climbs.id as cid, ticks.log_date, climbs.name as climb, sectors.name as sector, sectors.crag_name, ticks.suggested_grade, ticks.comment FROM ticks INNER JOIN users ON ticks.user_id = users.id INNER JOIN climbs ON ticks.climb_id = climbs.id INNER JOIN sectors ON climbs.sector_id = sectors.id WHERE users.id = {} ORDER BY ticks.log_date DESC;'.format(user_id))
 
     ticks = cur.fetchall()
@@ -332,7 +352,7 @@ def ticklist(user):
     #Ticklist table creation
     ticklist_columns = [desc[0] for desc in cur.description]
 
-    table= '<thead class= "thead-dark"><tr>'
+    table = '<thead class= "thead-dark"><tr>'
     for header in ticklist_columns:
         if header != 'cid':
             table += '<th>{header}</th>'.format(header= header.replace('_',' ').title())
@@ -367,6 +387,7 @@ def ticklist(user):
 
     return render_template("ticklist_template.html", username = current_user,
                                                      main_page = Markup(table),
+                                                     total_table = Markup(total_table),
                                                      fname = firstname,
                                                      lname = lastname,
                                                      dob = dob,
@@ -638,6 +659,10 @@ def import_ticklist():
         grades = []
         grade_count = 0
         for row in climb_rows:
+            if 'swank' in str(row):
+                print('swank')
+                print(len(row))
+                print(len(request.form['inputTicklist']))
             if len(request.form['inputTicklist']) > 0:
                 if len(row) != 19:
                     if 'AscentPyramid' in str(row):
@@ -679,7 +704,7 @@ def import_ticklist():
 
                         #Climb Name
                         elif x == 5:
-                            climb_name = str(part).replace('</a></span></td>','').split('>')[-1].lower().replace("'",'&apos&')
+                            climb_name = str(part).replace('</a></span></td>','').split('>')[-1].lower().replace("'",'&apos&').replace('*','')
 
                         #Crag
                         elif x == 9:
@@ -698,7 +723,7 @@ def import_ticklist():
 
                         #Stars
                         elif x == 15:
-                            stars = str(part).replace('<td valign="baseline">','').split('<')[0]
+                            stars = len(str(part).replace('<td valign="baseline">','').split('<')[0])
 
                             #Add data
                             if sector != None:
@@ -803,6 +828,14 @@ def import_ticklist():
                                 climb_id = climb_query[0][0]
 
                                 try:
+                                    if climb_id == 915:
+                                        print("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
+                                                                                                                                                                                                                                                                climb_id = int(climb_id),
+                                                                                                                                                                                                                                                                comment = comment,
+                                                                                                                                                                                                                                                                log_date = date,
+                                                                                                                                                                                                                                                                log_type = 'send',
+                                                                                                                                                                                                                                                                suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
+                                                                                                                                                                                                                                                                stars = stars))
                                     #Insert tick
                                     cur.execute("INSERT INTO ticks (user_id, climb_id, comment, log_date, log_type, suggested_grade, stars) VALUES ('{user_id}', '{climb_id}', '{comment}', '{log_date}', '{log_type}', '{suggested_grade}', '{stars}')".format(user_id = int(user_id),
                                                                                                                                                                                                                                                                 climb_id = int(climb_id),
@@ -810,7 +843,7 @@ def import_ticklist():
                                                                                                                                                                                                                                                                 log_date = date,
                                                                                                                                                                                                                                                                 log_type = 'send',
                                                                                                                                                                                                                                                                 suggested_grade = font_to_v_boulder(grades[grade_count - 1]),
-                                                                                                                                                                                                                                                                stars = len(stars)))
+                                                                                                                                                                                                                                                                stars = stars))
 
                                     print("Ascent of {} added!".format(climb_name))
 
@@ -886,11 +919,12 @@ def climb_page(climb_id):
 
     cur.execute("SELECT users.username, ticks.suggested_grade, ticks.log_date, climbs.avg_grade, sectors.name, sectors.crag_name, climbs.latitude, climbs.longitude, climbs.name as climb_name, ticks.comment, ticks.stars FROM ticks INNER JOIN users ON ticks.user_id = users.id INNER JOIN climbs ON ticks.climb_id = climbs.id INNER JOIN sectors ON climbs.sector_id = sectors.id WHERE climbs.id = {};".format(climb_id))
 
+    ticks = cur.fetchall()
     #------------------------------------------
     #Ticklist table creation
     ticklist_columns = [desc[0] for desc in cur.description]
     
-    table= '<thead class= "thead-dark"><tr>'
+    table = '<thead class= "thead-dark"><tr>'
     for header in ticklist_columns:
         if header == 'name':
             header = 'Sector'
@@ -903,11 +937,8 @@ def climb_page(climb_id):
 
     table += '</tr></thead><tbody>'
 
-    ticks = cur.fetchall()
-
     for row in ticks:
         table += '<tr>'
-        print(row)
         for num, item in enumerate(row):
             if num in [ticklist_columns.index('username'), 
                         ticklist_columns.index('suggested_grade'), 
@@ -918,6 +949,8 @@ def climb_page(climb_id):
 
                 if num == ticklist_columns.index('suggested_grade'):
                     table += '<td>V{a}</td>'.format(a = item)
+                elif num == ticklist_columns.index('comment'):
+                    table += '<td>{a}</td>'.format(a = item.replace('&apos&',"'"))
                 elif num in [ticklist_columns.index('log_date'), 
                                 ticklist_columns.index('username'),
                                 ticklist_columns.index('stars'),
